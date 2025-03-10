@@ -15,4 +15,4 @@ db_url = (f"postgresql+psycopg2://{DB_HOSTNAME}:{DB_PASSWORD}@localhost:{DB_PORT
 if db_url is None:
     raise ValueError("Environment variables must be set")
 
-engine = create_engine(db_url)
+engine = create_engine(db_url, echo=True)
