@@ -8,6 +8,7 @@ DB_HOSTNAME = os.getenv("DB_HOSTNAME")
 DB_PASSWORD = os.getenv("DB_PASSWORD")
 DB_PORT = os.getenv("DB_PORT")
 DB_NAME = os.getenv("DB_NAME")
+SECRET_KEY = os.getenv("SECRET_KEY")
 
 db_url = (f"postgresql+psycopg2://{DB_HOSTNAME}:{DB_PASSWORD}@localhost:{DB_PORT}"
           f"/{DB_NAME}")

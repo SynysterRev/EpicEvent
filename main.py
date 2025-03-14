@@ -2,7 +2,6 @@ from sqlalchemy.orm import Session
 
 from db_config import engine
 
-
 def main():
 
     try:
