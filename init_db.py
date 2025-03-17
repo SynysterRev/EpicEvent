@@ -1,13 +1,13 @@
-from db_config import DB_NAME, DB_PORT
-import psycopg2
 from getpass import getpass
 
-from sqlalchemy import create_engine
+import psycopg2
+from sqlalchemy import create_engine, insert, select
+
+from db_config import DB_NAME, DB_PORT
 from models import Base
-from models.event import Event
-from models.contract import Contract
-from models.client import Client
-from models.collaborator import Collaborator
+from models.collaborator import Role
+from utils.permissions import RoleType
+
 
 def init_db():
     print("You must use a user with the permission to create tables (postgres by "
@@ -42,11 +42,25 @@ def init_db():
             Base.metadata.create_all(engine)
             print(f"The tables have been successfully created in the database "
                   f"'{DB_NAME}'.")
+            with engine.connect() as conn:
+                result = conn.execute(select(Role)).fetchone()
+
+                if result is None:
+                    conn.execute(insert(Role),
+                                 [
+                                     {"name": RoleType.MANAGEMENT},
+                                     {"name": RoleType.SALES},
+                                     {"name": RoleType.SUPPORT},
+                                 ], )
+                    conn.commit()
+                print("RoleType tables populated.")
         except Exception as e:
             print(f"Error when trying to create tables : {e}")
 
+
     except Exception as e:
         print("An error occured :", e)
+
 
 if __name__ == "__main__":
     init_db()

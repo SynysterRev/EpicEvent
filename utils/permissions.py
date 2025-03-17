@@ -1,6 +1,10 @@
 import enum
 
-from models.collaborator import RoleType
+
+class RoleType(enum.Enum):
+    MANAGEMENT = "management"
+    SALES = "sales"
+    SUPPORT = "support"
 
 
 class ActionType(enum.Enum):

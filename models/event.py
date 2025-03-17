@@ -1,5 +1,7 @@
-from sqlalchemy import Column, Integer, ForeignKey, String, DATE, TIME
-from sqlalchemy.orm import relationship, backref
+import datetime
+
+from sqlalchemy import ForeignKey, String, Date, Time
+from sqlalchemy.orm import relationship, backref, mapped_column, Mapped
 
 from models import Base
 
@@ -7,20 +9,24 @@ from models import Base
 class Event(Base):
     __tablename__ = 'event'
 
-    id = Column(Integer, primary_key=True, autoincrement=True, nullable=False)
-    start_date = Column(DATE, nullable=False)
-    start_time = Column(TIME, nullable=False)
-    end_date = Column(DATE, nullable=False)
-    end_time = Column(TIME, nullable=False)
-    location = Column(String(200), nullable=False)
-    attendees = Column(Integer, nullable=False)
-    contract_id = Column(Integer, ForeignKey('contract.id',
-                                             ondelete='CASCADE'), nullable=True)
-    contract = relationship('Contract', backref=backref('events', uselist=False))
-    sales_contact_id = Column(Integer,
-                              ForeignKey('collaborator.id', ondelete='SET NULL'),
-                              nullable=True)
-    collaborator = relationship('Collaborator', backref='contracts')
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True,
+                                    nullable=False)
+    start_date: Mapped[datetime.date] = mapped_column(Date, nullable=False)
+    start_time: Mapped[datetime.time] = mapped_column(Time, nullable=False)
+    end_date: Mapped[datetime.date] = mapped_column(Date, nullable=False)
+    end_time: Mapped[datetime.time] = mapped_column(Time, nullable=False)
+    location: Mapped[str] = mapped_column(String(200), nullable=False)
+    attendees: Mapped[int] = mapped_column(nullable=False)
+    contract_id: Mapped[int] = mapped_column(ForeignKey('contract.id',
+                                                        ondelete='CASCADE'),
+                                             nullable=False)
+    contract: Mapped["Contract"] = relationship('Contract', backref=backref(
+        'events', uselist=False))
+    sales_contact_id: Mapped[int] = mapped_column(ForeignKey('collaborator.id',
+                                                             ondelete='RESTRICT'),
+                                                  nullable=False)
+    collaborator: Mapped["Collaborator"] = relationship("Collaborator",
+                                                        back_populates='events')
 
     def __repr__(self):
         return (f"Event {self.id} for contract {self.contract_id} start "

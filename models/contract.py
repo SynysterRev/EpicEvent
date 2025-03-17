@@ -1,8 +1,8 @@
 import enum
 from datetime import datetime
 
-from sqlalchemy import Column, Integer, DateTime, ForeignKey, Enum
-from sqlalchemy.orm import relationship
+from sqlalchemy import DateTime, ForeignKey, Enum
+from sqlalchemy.orm import relationship, mapped_column, Mapped
 
 from models import Base
 
@@ -16,18 +16,22 @@ class Status(enum.Enum):
 class Contract(Base):
     __tablename__ = 'contract'
 
-    id = Column(Integer, primary_key=True, autoincrement=True, nullable=False)
-    total_amount = Column(Integer, nullable=False)
-    remaining_amount = Column(Integer, nullable=False)
-    creation_date = Column(DateTime, default=datetime.now)
-    status = Column(Enum(Status), nullable=False)
-    client_id = Column(Integer, ForeignKey('client.id',
-                                           ondelete='SET NULL'), nullable=True)
-    client = relationship('Client', backref='contracts')
-    sales_contact_id = Column(Integer,
-                              ForeignKey('collaborator.id', ondelete='SET NULL'),
-                              nullable=True)
-    collaborator = relationship('Collaborator', backref='contracts')
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True,
+                                    nullable=False)
+    total_amount: Mapped[int] = mapped_column(nullable=False)
+    remaining_amount: Mapped[int] = mapped_column(nullable=False)
+    creation_date: Mapped[datetime] = mapped_column(DateTime, default=datetime.now)
+    status: Mapped[Status] = mapped_column(Enum(Status), nullable=False)
+    client_id: Mapped[int] = mapped_column(ForeignKey('client.id',
+                                                      ondelete='RESTRICT', ),
+                                           nullable=False)
+    client: Mapped["Client"] = relationship("Client", back_populates='contracts')
+
+    sales_contact_id: Mapped[int] = mapped_column(
+        ForeignKey('collaborator.id', ondelete='RESTRICT'),
+        nullable=False)
+    collaborator: Mapped["Collaborator"] = relationship("Collaborator",
+                                                        back_populates='contracts')
 
     def __repr__(self):
         return (f"Contract {self.id} for client {self.client.full_name} is "

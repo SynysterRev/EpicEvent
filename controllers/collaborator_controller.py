@@ -1,35 +1,86 @@
 from getpass import getpass
 
-import jwt
-from cryptography.hazmat.primitives import serialization
-from jwt import ExpiredSignatureError
-
-from models.collaborator import Collaborator
-from utils import cli, utils
 import click
-from db_config import SECRET_KEY
+from argon2.exceptions import VerifyMismatchError
+from sqlalchemy import select, insert
+from sqlalchemy.orm import Session
 
-class CollaboratorController:
-    pass
+from cli import cli
+from db_config import engine
+from models.collaborator import Collaborator, Role
+from models.client import Client
+from models.event import Event
+from models.contract import Contract
+from utils import util
+from utils.permissions import RoleType, ActionType, ResourceType
+
+
+def choose_from_enum(enum_class, prompt="Choose an option"):
+    options = {str(i + 1): member for i, member in enumerate(enum_class)}
+    print(f"{prompt}:")
+    for num, member in options.items():
+        print(f"{num}. {member.name}")
+
+    while True:
+        choice = input("Enter the number of your choice: ").strip()
+        if choice in options:
+            return options[choice]
+        print("Invalid choice. Please enter a valid number.")
+
+
+def get_id_from_enum_role(enum_class, role):
+    with Session(engine) as session:
+        role_id = session.execute(
+            select(Role.id).where(Role.name == role)
+        ).scalar()
+        if not role_id:
+            print(f"Error: Role {role.value} not found in collaborator_role!")
+            return
+        return role_id
+
+
+@cli.command()
+def create_collaborator():
+    """Create a new collaborator"""
+    collaborator_email = input("Enter the collaborator email: ")
+    with Session(engine) as session:
+        collaborator = session.execute(select(Collaborator).where(Collaborator.email ==
+                                                                  collaborator_email)).scalar()
+        if collaborator:
+            click.echo("This email already exists.")
+            return
+        collaborator_password = getpass("Enter the collaborator password: ")
+        collaborator_name = input("Enter the collaborator name: ")
+        collaborator_first_name = input("Enter the collaborator first name: ")
+        collaborator_phone_number = input("Enter the collaborator phone number: ")
+        role = choose_from_enum(RoleType)
+        role_id = get_id_from_enum_role(RoleType, role)
+        hashed_password = util.hash_password(collaborator_password)
+        collaborator = Collaborator(collaborator_email, collaborator_password,
+                                    collaborator_name, collaborator_first_name,
+                                    collaborator_phone_number,
+                                    role_id)
+        session.add(collaborator)
+        session.commit()
 
 
 @cli.command()
 def login():
-    # collaborator_login = input("Please enter your login: ")
-    # collaborator_password = getpass("Please enter your password: ")
-    # get password from db
-    # utils.verify_password(collaborator_password)
-
-    #encode token
-    payload = {
-        # "first_name": collaborator_login,
-    }
-    token = jwt.encode(payload=payload, key=SECRET_KEY)
-
-    # decode token
-    try:
-        token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoicG90YXRvIiwiYmFzZSI6MzJ9.WGwuB_F-Mwn5nr5ymuOfcSlxnyDipgDN2RuJCB37SG0"
-        payload = jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
-    except ExpiredSignatureError:
-        print("ExpiredSignatureError")
-
+    """Log the user in."""
+    with Session(engine) as session:
+        collaborator_login = input("Please enter your login: ")
+        collaborator = session.execute(select(Collaborator).where(Collaborator.email ==
+                                                                  collaborator_login)).scalar()
+        if collaborator:
+            try:
+                collaborator_password = getpass("Please enter your password: ")
+                util.verify_password(collaborator_password, collaborator.password)
+                click.echo("Login successful.")
+            except VerifyMismatchError as e:
+                click.echo("Incorrect password.")
+                return
+            # token = util.create_token(collaborator)
+            print(collaborator.has_permission(ActionType.DELETE,
+                                              ResourceType.EVENT))
+        else:
+            click.echo("This email is not registered.")
