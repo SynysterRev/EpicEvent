@@ -1,13 +1,14 @@
 import os
-import secrets
-from datetime import datetime, timedelta
+import re
 from datetime import UTC
+from datetime import datetime, timedelta
 
 import jwt
 from argon2 import PasswordHasher
 from jwt import ExpiredSignatureError
 
 from db_config import SECRET_KEY, TOKEN, reload_env
+from views import view
 
 DEFAULT_TOKEN_EXPIRY_MINUTES = 30
 
@@ -20,6 +21,61 @@ def hash_password(password):
 def verify_password(plain_password, hashed_password):
     ph = PasswordHasher()
     return ph.verify(hashed_password, plain_password)
+
+
+def validate_email(email):
+    if not re.match(r"^[\w.-]+@([\w-]+\.)+[\w-]{2,4}$", email):
+        raise ValueError("Invalid email address.")
+    return True
+
+
+def validate_password(password):
+    if not re.match(r"^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[^a-zA-Z0-9]).{8,}$", password):
+        raise ValueError("Your password must be at least 8 characters long, contains "
+                         "at least one uppercase letter, at least one lowercase "
+                         "letter, at least one number, and at least one special character.")
+    return True
+
+
+def validate_name(name):
+    if not re.match("^[a-zA-Z-]+$", name):
+        raise ValueError("Your name must be at least 1 character long and only "
+                         "contains letters and -.")
+    return True
+
+
+def validate_phone_number(phone_number):
+    if not re.match("^[0-9]{8,15}$", phone_number):
+        raise ValueError("Your phone number must be at least 8 digits long.")
+    return True
+
+
+def ask_for_input(message, validate_function=None):
+    if validate_function is None:
+        return view.get_input(message)
+    is_valid = False
+    value = ""
+    while not is_valid:
+        value = view.get_input(message)
+        try:
+            is_valid = validate_function(value)
+        except ValueError as e:
+            view.display_error(str(e))
+    return value
+
+
+def ask_for_password(message, validate_function=None):
+    if validate_function is None:
+        return view.get_password(message)
+    is_valid = False
+    value = ""
+    while not is_valid:
+        value = view.get_password(message)
+        try:
+            is_valid = validate_function(value)
+        except ValueError as e:
+            view.display_error(str(e))
+    return value
 
 
 def get_token():
@@ -38,12 +94,13 @@ def get_token():
 def create_token(collaborator):
     secret_key = SECRET_KEY
     if secret_key is None:
-        raise ValueError("SECRET_KEY not found in environment variables. Use the init command first.")
+        raise ValueError(
+            "SECRET_KEY not found in environment variables. Use the init command first.")
     payload = {
         "first_name": collaborator.first_name,
         "name": collaborator.name,
-        "role": collaborator.role.name.name,
-        "exp": datetime.now(UTC) + timedelta(DEFAULT_TOKEN_EXPIRY_MINUTES),
+        "role": collaborator.role.name.value,
+        "exp": datetime.now(UTC) + timedelta(minutes=DEFAULT_TOKEN_EXPIRY_MINUTES),
     }
     token = jwt.encode(payload=payload, key=secret_key)
     write_env_variable("TOKEN", token)

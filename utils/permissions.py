@@ -1,4 +1,8 @@
 import enum
+import functools
+
+from utils import util
+from views import view
 
 
 class RoleType(enum.Enum):
@@ -60,3 +64,15 @@ class PermissionManager:
         for permission in role_permissions:
             base_permissions[permission].extend(role_permissions[permission])
         return resource in base_permissions.get(action, [])
+
+
+def login_required(func):
+    @functools.wraps(func)
+    def decorator(*args, **kwargs):
+        try:
+            util.get_token()
+            return func(*args, **kwargs)
+        except Exception as e:
+            view.display_error(str(e))
+            return
+    return decorator

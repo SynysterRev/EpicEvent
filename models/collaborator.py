@@ -2,6 +2,7 @@ from sqlalchemy import String, ForeignKey, Enum
 from sqlalchemy.orm import relationship, mapped_column, Mapped
 
 from models import Base
+from utils import util
 from utils.permissions import PermissionManager, RoleType
 
 
@@ -31,14 +32,21 @@ class Collaborator(Base):
                                                        back_populates='collaborator')
     events: Mapped[list["Event"]] = relationship("Event", back_populates='collaborator')
     clients: Mapped[list["Client"]] = relationship("Client",
-                                                  back_populates='collaborator')
+                                                   back_populates='collaborator')
 
     def __init__(self, email, password, first_name, name, phone_number, role_id):
         super().__init__()
-        # add multiple checks
+        self.email = email
+        self.password = util.hash_password(password)
+        self.phone_number = phone_number
+        self.first_name = first_name
+        self.name = name
+        self.role_id = role_id
+
 
     def __repr__(self):
         return f"Collaborator {self.first_name} {self.name} : {self.role.name}"
+
 
     def has_permission(self, action, resource):
         return PermissionManager.has_permission(self.role.name, action, resource)
