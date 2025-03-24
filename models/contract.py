@@ -1,16 +1,16 @@
 import enum
 from datetime import datetime
 
-from sqlalchemy import DateTime, ForeignKey, Enum
+from sqlalchemy import DateTime, ForeignKey, Enum, func
 from sqlalchemy.orm import relationship, mapped_column, Mapped
 
 from models import Base
 
 
 class Status(enum.Enum):
-    signed = 1
-    pending = 2
-    canceled = 3
+    SIGNED = "signed"
+    PENDING = "pending"
+    CANCELLED = "cancelled"
 
 
 class Contract(Base):
@@ -20,7 +20,7 @@ class Contract(Base):
                                     nullable=False)
     total_amount: Mapped[int] = mapped_column(nullable=False)
     remaining_amount: Mapped[int] = mapped_column(nullable=False)
-    creation_date: Mapped[datetime] = mapped_column(DateTime, default=datetime.now)
+    creation_date: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
     status: Mapped[Status] = mapped_column(Enum(Status), nullable=False)
     client_id: Mapped[int] = mapped_column(ForeignKey('client.id',
                                                       ondelete='RESTRICT', ),
@@ -28,12 +28,24 @@ class Contract(Base):
     client: Mapped["Client"] = relationship("Client", back_populates='contracts')
 
     sales_contact_id: Mapped[int] = mapped_column(
-        ForeignKey('collaborator.id', ondelete='RESTRICT'),
-        nullable=False)
+        ForeignKey('collaborator.id', ondelete='SET NULL'),
+        nullable=True)
     collaborator: Mapped["Collaborator"] = relationship("Collaborator",
                                                         back_populates='contracts')
 
+    def __init__(self, total_amount, remaining_amount, status, client_id,
+                 sales_contact_id=None):
+        super().__init__()
+        self.total_amount = total_amount
+        self.remaining_amount = remaining_amount
+        self.status = status
+        self.client_id = client_id
+        self.sales_contact_id = sales_contact_id
+
+
+
     def __repr__(self):
         return (f"Contract {self.id} for client {self.client.full_name} is "
-                f"{self.status}.\n "
-                f"Total amount {self.total_amount}, remaining amount {self.remaining_amount}.")
+                f"{self.status.value}.\n "
+                f"Total amount {self.total_amount}€, remaining amount"
+                f" {self.remaining_amount}€.")

@@ -38,9 +38,9 @@ def validate_password(password):
 
 
 def validate_name(name):
-    if not re.match("^[a-zA-Z-]+$", name):
+    if not re.match("^[a-zA-Z- ]+$", name):
         raise ValueError("Your name must be at least 1 character long and only "
-                         "contains letters and -.")
+                         "contains letters, spaces and -.")
     return True
 
 
@@ -97,6 +97,7 @@ def create_token(collaborator):
         raise ValueError(
             "SECRET_KEY not found in environment variables. Use the init command first.")
     payload = {
+        "id": collaborator.id,
         "first_name": collaborator.first_name,
         "name": collaborator.name,
         "role": collaborator.role.name.value,

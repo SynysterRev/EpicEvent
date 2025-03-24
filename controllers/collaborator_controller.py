@@ -9,7 +9,8 @@ from models.client import Client
 from models.event import Event
 from models.contract import Contract
 from utils import util
-from utils.permissions import RoleType, login_required, ActionType, ResourceType
+from utils.permissions import RoleType, login_required, ActionType, ResourceType, \
+    PermissionManager, permission
 from views import view
 
 
@@ -37,8 +38,9 @@ def get_id_from_enum_role(role, session):
 
 
 @cli.command()
-@login_required
-def create_collaborator():
+@permission(ActionType.CREATE, ResourceType.COLLABORATOR)
+@login_required(pass_token=True)
+def create_collaborator(token):
     """Create a new collaborator"""
     with Session(engine) as session:
         is_valid = False

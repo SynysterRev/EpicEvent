@@ -44,7 +44,6 @@ class PermissionManager:
             ActionType.DELETE: [ResourceType.COLLABORATOR]
         },
         RoleType.SALES: {
-            ActionType.READ: [ResourceType.CLIENT, ResourceType.CONTRACT],
             ActionType.CREATE: [ResourceType.CONTRACT, ResourceType.EVENT],
             ActionType.UPDATE_MINE: [ResourceType.CLIENT, ResourceType.CONTRACT],
         },
@@ -66,13 +65,42 @@ class PermissionManager:
         return resource in base_permissions.get(action, [])
 
 
-def login_required(func):
-    @functools.wraps(func)
-    def decorator(*args, **kwargs):
-        try:
-            util.get_token()
-            return func(*args, **kwargs)
-        except Exception as e:
-            view.display_error(str(e))
-            return
+def login_required(pass_token=False):
+    def decorator(func):
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            try:
+                token = util.get_token()
+                if pass_token:
+                    return func(*args, token=token, **kwargs)
+                else:
+                    return func(*args, **kwargs)
+            except Exception as e:
+                view.display_error(str(e))
+                return
+
+        return wrapper
+
+    return decorator
+
+
+def permission(action, resource):
+    def decorator(func):
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            try:
+                token = util.get_token()
+                if PermissionManager.has_permission(RoleType(token["role"]), action,
+                                                    resource):
+                    return func(*args, **kwargs)
+                else:
+                    view.display_error(
+                        f"You do not have permission to perform {action.name} on"
+                        f" {resource.name}.")
+                    return
+            except Exception as e:
+                view.display_error(str(e))
+
+        return wrapper
+
     return decorator

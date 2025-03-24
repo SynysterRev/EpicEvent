@@ -2,6 +2,7 @@ import datetime
 
 from sqlalchemy import ForeignKey, String, Date, Time
 from sqlalchemy.orm import relationship, backref, mapped_column, Mapped
+from sqlalchemy.sql.operators import truediv
 
 from models import Base
 
@@ -23,8 +24,8 @@ class Event(Base):
     contract: Mapped["Contract"] = relationship('Contract', backref=backref(
         'events', uselist=False))
     sales_contact_id: Mapped[int] = mapped_column(ForeignKey('collaborator.id',
-                                                             ondelete='RESTRICT'),
-                                                  nullable=False)
+                                                             ondelete='SET NULL'),
+                                                  nullable=True)
     collaborator: Mapped["Collaborator"] = relationship("Collaborator",
                                                         back_populates='events')
 

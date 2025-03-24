@@ -8,7 +8,8 @@ from db_config import DB_NAME, DB_PORT, DB_PASSWORD, DB_HOSTNAME, SECRET_KEY
 def cli():
     pass
 
-from controllers import collaborator_controller
+from controllers import (collaborator_controller, client_controller,
+                         contract_controller, event_controller)
 
 @click.command()
 def init():

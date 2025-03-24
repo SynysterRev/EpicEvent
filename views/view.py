@@ -1,5 +1,3 @@
-from getpass import getpass
-
 import click
 
 
