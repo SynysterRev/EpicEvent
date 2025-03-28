@@ -107,6 +107,12 @@ def create_token(collaborator):
     write_env_variable("TOKEN", token)
     return token
 
+def delete_token():
+    secret_key = SECRET_KEY
+    if secret_key is None:
+        raise ValueError(
+            "SECRET_KEY not found in environment variables. Use the init command first.")
+    write_env_variable("TOKEN", "")
 
 def write_env_variable(var_name, var_value):
     env_file = '.env'

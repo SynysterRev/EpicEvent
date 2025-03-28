@@ -48,7 +48,8 @@ class Collaborator(Base):
         return f"Collaborator {self.first_name} {self.name} : {self.role.name}"
 
     def __str__(self):
-        return f"Collaborator {self.first_name} {self.name} : {self.role.name}"
+        return (f"Collaborator {self.first_name} {self.name} : {self.role.name}. "
+                f"Email: {self.email}, phone number: {self.phone_number}.")
 
     def has_permission(self, action, resource):
         return PermissionManager.has_permission(self.role.name, action, resource)

@@ -1,16 +1,18 @@
 from argon2.exceptions import VerifyMismatchError
-from sqlalchemy import select
+from sqlalchemy import select, or_
 from sqlalchemy.orm import Session
 
 from cli import cli
 from db_config import engine
 from models.collaborator import Collaborator, Role
-from models.client import Client
-from models.event import Event
-from models.contract import Contract
 from utils import util
-from utils.permissions import RoleType, login_required, ActionType, ResourceType, \
-    PermissionManager, permission
+from utils.permissions import (
+    RoleType,
+    login_required,
+    ActionType,
+    ResourceType,
+    permission,
+)
 from views import view
 
 
@@ -28,9 +30,7 @@ def choose_from_enum(enum_class, prompt="Choose an option"):
 
 
 def get_id_from_enum_role(role, session):
-    role_id = session.execute(
-        select(Role.id).where(Role.name == role)
-    ).scalar()
+    role_id = session.execute(select(Role.id).where(Role.name == role)).scalar()
     if not role_id:
         view.display_error(f"Role {role.value} not found in collaborator_role.")
         return None
@@ -39,40 +39,130 @@ def get_id_from_enum_role(role, session):
 
 @cli.command()
 @permission(ActionType.CREATE, ResourceType.COLLABORATOR)
-@login_required(pass_token=True)
-def create_collaborator(token):
+@login_required()
+def create_collaborator():
     """Create a new collaborator"""
     with Session(engine) as session:
-        is_valid = False
-        while not is_valid:
-            collaborator_email = util.ask_for_input("Enter the collaborator email",
-                                                    util.validate_email)
-            collaborator = session.execute(
-                select(Collaborator).where(Collaborator.email ==
-                                           collaborator_email)).scalar()
-            if collaborator:
-                view.display_error("This email already exists.")
-            else:
-                is_valid = True
+        collaborator_email = util.ask_for_input(
+            "Enter the collaborator email", util.validate_email
+        )
+        collaborator_phone_number = util.ask_for_input(
+            "Enter the collaborator phone " "number ", util.validate_phone_number
+        )
+        collaborator = session.execute(
+            select(Collaborator).where(
+                or_(
+                    Collaborator.email == collaborator_email,
+                    Collaborator.phone_number == collaborator_phone_number,
+                )
+            )
+        ).scalar_one_or_none()
+        if collaborator:
+            view.display_error("This email or phone number already exists.")
+            return
 
-        collaborator_password = util.ask_for_password("Enter the collaborator "
-                                                      "password: ",
-                                                      util.validate_password)
-        collaborator_name = util.ask_for_input("Enter the collaborator name: ",
-                                               util.validate_name)
-        collaborator_first_name = util.ask_for_input("Enter the collaborator first "
-                                                     "name: ", util.validate_name)
-        collaborator_phone_number = util.ask_for_input("Enter the collaborator phone "
-                                                       "number: ",
-                                                       util.validate_phone_number)
+        collaborator_password = util.ask_for_password(
+            "Enter the collaborator " "password ", util.validate_password
+        )
+        collaborator_name = util.ask_for_input(
+            "Enter the collaborator last_name ", util.validate_name
+        )
+        collaborator_first_name = util.ask_for_input(
+            "Enter the collaborator first name ", util.validate_name
+        )
+
         role = choose_from_enum(RoleType)
         role_id = get_id_from_enum_role(role, session)
-        collaborator = Collaborator(collaborator_email, collaborator_password,
-                                    collaborator_name, collaborator_first_name,
-                                    collaborator_phone_number,
-                                    role_id)
+        collaborator = Collaborator(
+            collaborator_email,
+            collaborator_password,
+            collaborator_first_name,
+            collaborator_name,
+            collaborator_phone_number,
+            role_id,
+        )
         session.add(collaborator)
         session.commit()
+
+
+def ask_collaborator_id(session):
+    email_phone = util.ask_for_input(
+        "Enter the collaborator email or phone " "number "
+    )
+    collaborator = session.execute(
+        select(Collaborator).where(
+            or_(
+                Collaborator.email == email_phone,
+                Collaborator.phone_number == email_phone,
+            )
+        )
+    ).scalar_one_or_none()
+
+    return collaborator
+
+
+@cli.command()
+@permission(ActionType.UPDATE_ALL, ResourceType.COLLABORATOR)
+@login_required()
+def update_collaborator():
+    """Update collaborator"""
+    with Session(engine) as session:
+        collaborator = ask_collaborator_id(session)
+
+        if collaborator is None:
+            view.display_error("No collaborator found.")
+            return
+
+        view.display_message(f"Updating {collaborator}")
+        while True:
+            choice = int(view.display_edit_collaborator())
+            if 0 <= choice <= 6:
+                if choice == 0:
+                    break
+                elif choice == 1:
+                    collaborator.first_name = util.ask_for_input("First name ",
+                                                                 util.validate_name)
+                elif choice == 2:
+                    collaborator.name = util.ask_for_input("Last name ",
+                                                           util.validate_name)
+                elif choice == 3:
+                    collaborator.email = util.ask_for_input("Email ",
+                                                            util.validate_email)
+                elif choice == 4:
+                    collaborator.password = util.hash_password(util.ask_for_password(
+                        "Password ", util.validate_password))
+                elif choice == 5:
+                    collaborator.phone_number = util.ask_for_input("Phone number ",
+                                                                   util.validate_phone_number)
+                elif choice == 6:
+                    role = choose_from_enum(RoleType)
+                    role_id = get_id_from_enum_role(role, session)
+                    collaborator.role_id = role_id
+            else:
+                view.display_error("Invalid choice.")
+        session.commit()
+        view.display_message(f"{collaborator} has been updated.", "green")
+
+
+@cli.command()
+@permission(ActionType.DELETE, ResourceType.COLLABORATOR)
+@login_required(pass_token=True)
+def delete_collaborator(token):
+    """Delete collaborator"""
+    with Session(engine) as session:
+        collaborator = ask_collaborator_id(session)
+
+        if collaborator is None:
+            view.display_error("No collaborator found.")
+            return
+
+        choice = util.ask_for_input(
+            f"Are you sure you want to delete {collaborator} ? Y/N").lower()
+        if choice in ("y", "yes"):
+            session.delete(collaborator)
+            session.commit()
+            if collaborator.id == token["id"]:
+                logout_user()
 
 
 @cli.command()
@@ -80,19 +170,32 @@ def login():
     """Log the user in."""
     with Session(engine) as session:
         collaborator_login = util.ask_for_input("Please enter your email")
-        collaborator = session.execute(select(Collaborator).where(Collaborator.email ==
-                                                                  collaborator_login)).scalar()
+        collaborator = session.execute(
+            select(Collaborator).where(Collaborator.email == collaborator_login)
+        ).scalar_one_or_none()
         if collaborator:
             try:
-                collaborator_password = util.ask_for_password("Please enter your password")
+                collaborator_password = util.ask_for_password(
+                    "Please enter your password"
+                )
                 util.verify_password(collaborator_password, collaborator.password)
-            except VerifyMismatchError as e:
+            except VerifyMismatchError:
                 view.display_error("Incorrect password.")
                 return
             try:
                 util.create_token(collaborator)
-                view.display_message("Login successful.", 'green')
+                view.display_message("Login successful.", "green")
             except Exception as e:
                 view.display_error(str(e))
         else:
             view.display_error("This email is not registered.")
+
+
+@cli.command()
+def logout():
+    """Log the user out."""
+    logout_user()
+
+def logout_user():
+    util.delete_token()
+    view.display_message("Logout successful.", "green")
