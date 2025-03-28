@@ -14,7 +14,7 @@ from views import view
     "--assign",
     type=click.Choice(["all, assigned, no-contact"]),
     default="all",
-    help="Only return contracts assigned to current user",
+    help="Return all the events with or without filter",
 )
 @permission(ActionType.READ, ResourceType.EVENT)
 @login_required(pass_token=True)
@@ -36,18 +36,4 @@ def get_events(token, assign):
         if not all_events:
             view.display_message(f"No events found.")
         for event in all_events:
-            view.display_message(event)
-
-
-@cli.command()
-@permission(ActionType.READ, ResourceType.EVENT)
-@login_required()
-def get_all_events_without_sales_contact():
-    """Get all events without sales contact"""
-    with Session(engine) as session:
-        all_events = session.execute(
-            select(Event).where(Event.sales_contact_id == None))
-        if not all_events:
-            view.display_message(f"No events without sales contact found.")
-        for event, in all_events:
             view.display_message(event)
