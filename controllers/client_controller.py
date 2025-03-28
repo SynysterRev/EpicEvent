@@ -1,13 +1,15 @@
 import click
-from sqlalchemy import select
+from sqlalchemy import select, or_
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from cli import cli
 from db_config import engine
 from models.client import Client
+from models.collaborator import Collaborator
 from utils import util
-from utils.permissions import login_required, ActionType, ResourceType, permission
+from utils.permissions import login_required, ActionType, ResourceType, permission, \
+    RoleType, check_filters
 from views import view
 
 
@@ -18,6 +20,7 @@ from views import view
     help="Only return clients assigned to current user",
 )
 @permission(ActionType.READ, ResourceType.CLIENT)
+@check_filters(ResourceType.CLIENT, "assigned")
 @login_required(pass_token=True)
 def get_clients(token, assigned):
     """Get all clients"""
@@ -29,8 +32,8 @@ def get_clients(token, assigned):
             view.display_error(f"No id stocked in the current token. Try to log again.")
             return
         if assigned:
-            stmt = stmt.where(Client.id == collaborator_id)
-        all_clients = session.execute(stmt)
+            stmt = stmt.where(Client.sales_contact_id == collaborator_id)
+        all_clients = session.execute(stmt).scalars().all()
         if not all_clients:
             view.display_message(f"No clients found.")
         for client in all_clients:
@@ -60,22 +63,63 @@ def create_client(token):
         except IntegrityError as e:
             view.display_error(str(e))
 
-# @cli.command()
-# @login_required
-# def update_client():
-#     """Update a client"""
-#     with Session(engine) as session:
-#         is_valid = False
-#         while not is_valid:
-#             client_email = util.ask_for_input("Enter your client email",
-#                                               util.validate_email)
-#             client = session.execute(
-#                 select(Client).where(Client.email ==
-#                                            client_email)).scalar()
-#             if not client:
-#                 view.display_error("This email does not exist.")
-#             else:
-#                 is_valid = True
-#
-#         update_stmt = update(Client).where(Client.email == client_email).values(
-#             full_name="")
+def ask_client_id(session):
+    email_phone = util.ask_for_input(
+        "Enter the client email or phone number "
+    )
+    client = session.execute(
+        select(Client).where(
+            or_(
+                Client.email == email_phone,
+                Client.phone_number == email_phone,
+            )
+        )
+    ).scalar_one_or_none()
+
+    return client
+
+
+@cli.command()
+@permission(ActionType.UPDATE_MINE, ResourceType.CLIENT)
+@login_required(pass_token=True)
+def update_client(token):
+    """Update a client"""
+    with Session(engine) as session:
+        client = ask_client_id(session)
+        if not client:
+            view.display_error("No client found.")
+            return
+
+        if client.id != token["id"]:
+            view.display_error(f"This client is not assigned to you")
+            return
+
+        view.display_message(f"Updating {client}")
+        while True:
+            choice = int(view.display_edit_client())
+            if 0 <= choice <= 6:
+                if choice == 0:
+                    break
+                elif choice == 1:
+                    client.first_name = util.ask_for_input("Full name ",
+                                                                 util.validate_name)
+                elif choice == 2:
+                    client.email = util.ask_for_input("Email ",
+                                                            util.validate_email)
+                elif choice == 3:
+                    client.phone_number = util.ask_for_input("Phone number ",
+                                                                   util.validate_phone_number)
+                elif choice == 4:
+                    client.company = util.ask_for_input("Company name ")
+                elif choice == 5:
+                    sales_id = util.ask_for_input("Sales contact id ",
+                                                                 util.validate_digit)
+                    collaborator = session.get(Collaborator, sales_id)
+                    if collaborator and collaborator.role.name == RoleType.SALES:
+                        client.sales_contact_id = sales_id
+                    else:
+                        view.display_error("Sales contact id does not exist.")
+            else:
+                view.display_error("Invalid choice.")
+        session.commit()
+        view.display_message(f"{client} has been updated.", "green")

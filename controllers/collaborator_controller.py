@@ -16,19 +16,6 @@ from utils.permissions import (
 from views import view
 
 
-def choose_from_enum(enum_class, prompt="Choose an option"):
-    options = {str(i + 1): member for i, member in enumerate(enum_class)}
-    view.display_message(f"{prompt}:")
-    for num, member in options.items():
-        view.display_message(f"{num}. {member.name}")
-
-    while True:
-        choice = view.get_input("Enter the number of your choice").strip()
-        if choice in options:
-            return options[choice]
-        view.display_error("Invalid choice. Please enter a valid number.")
-
-
 def get_id_from_enum_role(role, session):
     role_id = session.execute(select(Role.id).where(Role.name == role)).scalar()
     if not role_id:
@@ -47,7 +34,7 @@ def create_collaborator():
             "Enter the collaborator email", util.validate_email
         )
         collaborator_phone_number = util.ask_for_input(
-            "Enter the collaborator phone " "number ", util.validate_phone_number
+            "Enter the collaborator phone number ", util.validate_phone_number
         )
         collaborator = session.execute(
             select(Collaborator).where(
@@ -62,7 +49,7 @@ def create_collaborator():
             return
 
         collaborator_password = util.ask_for_password(
-            "Enter the collaborator " "password ", util.validate_password
+            "Enter the collaborator password ", util.validate_password
         )
         collaborator_name = util.ask_for_input(
             "Enter the collaborator last_name ", util.validate_name
@@ -71,7 +58,7 @@ def create_collaborator():
             "Enter the collaborator first name ", util.validate_name
         )
 
-        role = choose_from_enum(RoleType)
+        role = util.choose_from_enum(RoleType)
         role_id = get_id_from_enum_role(role, session)
         collaborator = Collaborator(
             collaborator_email,
@@ -87,7 +74,7 @@ def create_collaborator():
 
 def ask_collaborator_id(session):
     email_phone = util.ask_for_input(
-        "Enter the collaborator email or phone " "number "
+        "Enter the collaborator email or phone number "
     )
     collaborator = session.execute(
         select(Collaborator).where(
@@ -135,7 +122,7 @@ def update_collaborator():
                     collaborator.phone_number = util.ask_for_input("Phone number ",
                                                                    util.validate_phone_number)
                 elif choice == 6:
-                    role = choose_from_enum(RoleType)
+                    role = util.choose_from_enum(RoleType)
                     role_id = get_id_from_enum_role(role, session)
                     collaborator.role_id = role_id
             else:

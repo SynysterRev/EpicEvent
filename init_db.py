@@ -3,7 +3,7 @@ from getpass import getpass
 import psycopg2
 from sqlalchemy import create_engine, insert, select
 
-from db_config import DB_NAME, DB_PORT
+from db_config import DB_NAME, DB_PORT, DB_HOSTNAME
 from models import Base
 from models.collaborator import Role
 from utils.permissions import RoleType
@@ -34,6 +34,8 @@ def init_db():
         else:
             print(f"Database '{DB_NAME}' already exists.")
 
+        cursor.execute(f"GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO {DB_HOSTNAME};")
+        cursor.execute(f"GRANT USAGE, SELECT, UPDATE ON ALL SEQUENCES IN SCHEMA public TO {DB_HOSTNAME};")
         cursor.close()
         conn.close()
 

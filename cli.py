@@ -4,12 +4,15 @@ import click
 import secrets
 from db_config import DB_NAME, DB_PORT, DB_PASSWORD, DB_HOSTNAME, SECRET_KEY
 
+
 @click.group()
 def cli():
     pass
 
+
 from controllers import (collaborator_controller, client_controller,
                          contract_controller, event_controller)
+
 
 @click.command()
 def init():
@@ -54,6 +57,7 @@ def init():
     click.echo("Initializing database...")
     from init_db import init_db
     init_db()
+
 
 cli.add_command(init)
 

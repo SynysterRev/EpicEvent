@@ -48,4 +48,6 @@ class Contract(Base):
         return (f"Contract {self.id} for client {self.client.full_name} is "
                 f"{self.status.value}.\n "
                 f"Total amount {self.total_amount}€, remaining amount"
-                f" {self.remaining_amount}€.")
+                f" {self.remaining_amount}€."
+                f" Sales contact {self.collaborator.first_name}"
+                f" {self.collaborator.name}.")

@@ -1,8 +1,8 @@
 from datetime import datetime
 
 from sqlalchemy import String, DateTime, ForeignKey
-from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship, mapped_column, Mapped
+from sqlalchemy.sql import func
 
 from models import Base
 
@@ -29,7 +29,6 @@ class Client(Base):
     contracts: Mapped[list["Contract"]] = relationship("Contract",
                                                        back_populates='client')
 
-
     def __init__(self, full_name, email, phone_number, company, sales_contact_id):
         super().__init__()
         self.full_name = full_name
@@ -39,7 +38,8 @@ class Client(Base):
         self.sales_contact_id = sales_contact_id
 
     def __repr__(self):
-        return f"Client {self.full_name} : mail {self.email}, phone {self.phone_number}"
+        return str(self)
 
     def __str__(self):
-        return f"Client {self.full_name} : mail {self.email}, phone {self.phone_number}"
+        return (f"Client {self.full_name} : mail {self.email}, phone {self.phone_number}, "
+                f"company {self.company}, sales contact {self.sales_contact_id}")

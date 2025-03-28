@@ -44,7 +44,7 @@ class PermissionManager:
             ActionType.DELETE: [ResourceType.COLLABORATOR]
         },
         RoleType.SALES: {
-            ActionType.CREATE: [ResourceType.CONTRACT, ResourceType.EVENT],
+            ActionType.CREATE: [ResourceType.CLIENT, ResourceType.EVENT],
             ActionType.UPDATE_MINE: [ResourceType.CLIENT, ResourceType.CONTRACT],
         },
         RoleType.SUPPORT: {
@@ -63,6 +63,92 @@ class PermissionManager:
         for permission in role_permissions:
             base_permissions[permission].extend(role_permissions[permission])
         return resource in base_permissions.get(action, [])
+
+
+class FilterPermissionManager:
+    FILTER_PERMISSIONS = {
+        RoleType.MANAGEMENT: {
+            ResourceType.CONTRACT: {
+                "status": ["signed", "pending", "cancelled"],
+                "remaining_amount": [True],
+            },
+            ResourceType.EVENT: {
+                "assign": ["all", "no-contact"],
+            }
+        },
+        RoleType.SALES: {
+            ResourceType.CONTRACT: {
+                "assigned": [True],
+                "status": ["signed", "pending", "cancelled"],
+                "remaining_amount": [True],
+            },
+            ResourceType.CLIENT: {
+                "assigned": [True],
+            }
+        },
+        RoleType.SUPPORT: {
+            ResourceType.EVENT: {
+                "assign": ["all", "assigned"],
+            }
+        }
+    }
+
+    @staticmethod
+    def can_use_filter(role, resource, filter_name, filter_value):
+        """Checks if a role can use a specific filter with a given value ON a specific resource."""
+        role_perms = FilterPermissionManager.FILTER_PERMISSIONS.get(role, {})
+        resource_perms = role_perms.get(resource, {})
+        allowed_values = resource_perms.get(filter_name)
+
+        # Value none means no filter by default
+        if filter_value is None:
+            return True
+
+        if allowed_values is None:
+            if isinstance(filter_value, bool) and filter_value is False:
+                return True
+            return False
+
+        if isinstance(filter_value, bool):
+            if filter_value is True:
+                return True in allowed_values
+            else:
+                return True
+
+        is_allowed = filter_value in allowed_values
+        return is_allowed
+
+
+def check_filters(resource, *filter_names):
+    """
+    Decorator to check permissions for specified filter arguments
+    """
+
+    def decorator(func):
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            try:
+                token = util.get_token()
+                role = RoleType(token["role"])
+            except Exception as e:
+                view.display_error(f"Authentication error: {e}")
+                return None
+
+            for name in filter_names:
+                if name in kwargs:
+                    value = kwargs[name]
+                    if not FilterPermissionManager.can_use_filter(role, resource, name,
+                                                                  value):
+                        view.display_error(
+                            f"Role '{role.value}' does not have permission to use filter "
+                            f"'--{name}' with value '{value}' for resource '{resource.name}'."
+                        )
+                        return None
+            return func(*args, **kwargs)
+
+        return wrapper
+
+    return decorator
 
 
 def login_required(pass_token=False):

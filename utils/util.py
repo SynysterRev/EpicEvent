@@ -49,6 +49,16 @@ def validate_phone_number(phone_number):
         raise ValueError("Your phone number must be at least 8 digits long.")
     return True
 
+def validate_digit(number):
+    if not number.isdigit():
+        raise ValueError("You must enter a number.")
+    return True
+
+def validate_decimal(number):
+    if not number.isdecimal():
+        raise ValueError("You must enter a decimal number.")
+    return True
+
 
 def ask_for_input(message, validate_function=None):
     if validate_function is None:
@@ -142,3 +152,16 @@ def write_env_variable(var_name, var_value):
         raise PermissionError(f"Permission denied: Unable to access '{env_file}' file.")
     except Exception as e:
         raise Exception(f"Error writing to '{env_file}': {str(e)}")
+
+
+def choose_from_enum(enum_class, prompt="Choose an option"):
+    options = {str(i + 1): member for i, member in enumerate(enum_class)}
+    view.display_message(f"{prompt}:")
+    for num, member in options.items():
+        view.display_message(f"{num}. {member.name}")
+
+    while True:
+        choice = view.get_input("Enter the number of your choice").strip()
+        if choice in options:
+            return options[choice]
+        view.display_error("Invalid choice. Please enter a valid number.")
