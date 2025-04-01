@@ -23,14 +23,41 @@ class Event(Base):
                                              nullable=False)
     contract: Mapped["Contract"] = relationship('Contract', backref=backref(
         'events', uselist=False))
-    sales_contact_id: Mapped[int] = mapped_column(ForeignKey('collaborator.id',
+    support_contact_id: Mapped[int] = mapped_column(ForeignKey('collaborator.id',
                                                              ondelete='SET NULL'),
                                                   nullable=True)
     collaborator: Mapped["Collaborator"] = relationship("Collaborator",
                                                         back_populates='events')
 
+
+    def __init__(self, start_date, start_time, end_date, end_time, location,
+                 attendees, contract_id, support_contact_id):
+        super().__init__()
+        self.start_date = start_date
+        self.start_time = start_time
+        self.end_date = end_date
+        self.end_time = end_time
+        self.location = location
+        self.attendees = attendees
+        self.contract_id = contract_id
+        self.support_contact_id = support_contact_id
+
+
+    def __str__(self):
+        support_contact_info = (
+            f"Support contact: {self.collaborator.first_name} {self.collaborator.name}."
+            if self.collaborator is not None
+            else "Support contact: No support assigned."
+        )
+
+        event_info = (
+            f"Event {self.id} for contract {self.contract_id} start "
+            f"{self.start_date} at {self.start_time} and end {self.end_date} at "
+            f"{self.end_time}.\nIt takes place on {self.location} and "
+            f"{self.attendees} persons are expected.\n"
+            f"{support_contact_info}"
+        )
+        return event_info
+
     def __repr__(self):
-        return (f"Event {self.id} for contract {self.contract_id} start "
-                f"{self.start_date} at {self.start_time} and end {self.end_date} at "
-                f"{self.end_time}.\n It takes place on {self.location} and "
-                f"{self.attendees} persons are expected.")
+        return str(self)

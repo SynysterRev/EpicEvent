@@ -2,6 +2,7 @@ import click
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+import validator
 from cli import cli
 from db_config import engine
 from models.client import Client
@@ -9,7 +10,7 @@ from models.collaborator import Collaborator
 from models.contract import Contract, Status
 from utils import util
 from utils.permissions import login_required, permission, ActionType, ResourceType, \
-    RoleType, check_filters
+    RoleType, check_filters, PermissionManager
 from views import view
 
 
@@ -30,7 +31,7 @@ from views import view
     is_flag=True,
     help="Only return contracts assigned to current user",
 )
-@permission(ActionType.READ, ResourceType.CONTRACT)
+@permission(ActionType.READ, resource=ResourceType.CONTRACT)
 @check_filters(ResourceType.CONTRACT, "status", "remaining_amount", "assigned")
 @login_required(pass_token=True)
 def get_contracts(token, status, remaining_amount, assigned):
@@ -57,12 +58,12 @@ def get_contracts(token, status, remaining_amount, assigned):
 
 
 @cli.command()
-@permission(ActionType.CREATE, ResourceType.CONTRACT)
+@permission(ActionType.CREATE, resource=ResourceType.CONTRACT)
 @login_required()
 def create_contract():
     """Create a new contract"""
     with Session(engine) as session:
-        client_id = util.ask_for_input("Client ID", util.validate_digit)
+        client_id = util.ask_for_input("Client ID", validator.validate_digit)
         client = session.get(Client, client_id)
         if not client:
             view.display_error(f"Client with id {client_id} does not exist.")
@@ -77,8 +78,8 @@ def create_contract():
             view.display_error(f"This collaborator cannot be assigned to a contract.")
             return
 
-        total_amount = util.ask_for_input("Total amount ", util.validate_decimal)
-        remaining_amount = util.ask_for_input("Total amount ", util.validate_decimal)
+        total_amount = util.ask_for_input("Total amount ", validator.validate_decimal)
+        remaining_amount = util.ask_for_input("Total amount ", validator.validate_decimal)
         status = util.choose_from_enum(Status)
         contract = Contract(total_amount, remaining_amount, status,
                             client_id, sales_contact_id)
@@ -87,20 +88,30 @@ def create_contract():
 
 
 @cli.command()
-@permission(ActionType.UPDATE_ALL, ResourceType.CONTRACT)
-@permission(ActionType.UPDATE_MINE, ResourceType.CONTRACT)
+@permission(ActionType.UPDATE_ALL,ActionType.UPDATE_MINE,
+            resource=ResourceType.CONTRACT)
 @login_required(pass_token=True)
 def update_contract(token):
     """Update a contract"""
     with Session(engine) as session:
-        contract_id = util.ask_for_input("Contract ID", util.validate_digit)
+        contract_id = util.ask_for_input("Contract ID", validator.validate_digit)
         contract = session.get(Contract, contract_id)
         if not contract:
             view.display_error(f"Contract with id {contract_id} does not exist.")
             return
-        # if update mine check contract
 
-        view.display_message(f"Updating {contract}")
+        is_manager = PermissionManager.has_permission(RoleType(
+            token["role"]), ActionType.UPDATE_ALL, resource=ResourceType.EVENT)
+
+        if not is_manager:
+            if contract.sales_contact_id != token["id"]:
+                view.display_error(
+                    "You are not authorized to update an contract to which you are not "
+                    "assigned.")
+                return
+
+
+        view.display_message(f"Updating\n{contract}", "blue")
         while True:
             choice = int(view.display_edit_contract())
             if 0 <= choice <= 6:
@@ -108,21 +119,21 @@ def update_contract(token):
                     break
                 elif choice == 1:
                     contract.total_amount = util.ask_for_input("Total amount ",
-                                                           util.validate_decimal)
+                                                           validator.validate_decimal)
                 elif choice == 2:
                     contract.remaining_amount = util.ask_for_input("Remaining amount ",
-                                                      util.validate_email)
+                                                      validator.validate_email)
                 elif choice == 3:
                     contract.status = util.choose_from_enum(Status)
                 elif choice == 4:
                     client_id = util.ask_for_input("Client ID ",
-                                                    util.validate_digit)
+                                                    validator.validate_digit)
                     if session.get(Client, client_id):
                         contract.client_id = client_id
                 # do the client need to be changed too ?
                 elif choice == 5:
                     sales_id = util.ask_for_input("Sales contact ID ",
-                                                  util.validate_digit)
+                                                  validator.validate_digit)
                     collaborator = session.get(Collaborator, sales_id)
                     if collaborator and collaborator.role.name == RoleType.SALES:
                         contract.sales_contact_id = sales_id

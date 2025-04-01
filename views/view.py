@@ -2,7 +2,7 @@ import click
 
 
 def get_input(message):
-    value = click.prompt(message)
+    value = click.prompt(message, default="", show_default=False)
     return value
 
 
@@ -50,4 +50,19 @@ def display_edit_contract():
         "4. Edit client_id\n"
         "5. Edit sales contact id\n"
         "0. Quit\n")
+    return choice
+
+
+def display_edit_event(is_manager):
+    choices = ("1. Edit start date\n"
+        "2. Edit start time\n"
+        "3. Edit end date\n"
+        "4. Edit end time\n"
+        "5. Edit location\n"
+        "6. Edit number attendees\n")
+    if is_manager:
+        choices += ("7. Edit contract id\n"
+        "8. Edit support contact id\n")
+    choices += "0. Quit\n"
+    choice = click.prompt(choices)
     return choice

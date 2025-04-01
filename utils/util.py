@@ -23,43 +23,6 @@ def verify_password(plain_password, hashed_password):
     return ph.verify(hashed_password, plain_password)
 
 
-def validate_email(email):
-    if not re.match(r"^[\w.-]+@([\w-]+\.)+[\w-]{2,4}$", email):
-        raise ValueError("Invalid email address.")
-    return True
-
-
-def validate_password(password):
-    if not re.match(r"^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[^a-zA-Z0-9]).{8,}$", password):
-        raise ValueError("Your password must be at least 8 characters long, contains "
-                         "at least one uppercase letter, at least one lowercase "
-                         "letter, at least one number, and at least one special character.")
-    return True
-
-
-def validate_name(name):
-    if not re.match("^[a-zA-Z- ]+$", name):
-        raise ValueError("Your name must be at least 1 character long and only "
-                         "contains letters, spaces and -.")
-    return True
-
-
-def validate_phone_number(phone_number):
-    if not re.match("^[0-9]{8,15}$", phone_number):
-        raise ValueError("Your phone number must be at least 8 digits long.")
-    return True
-
-def validate_digit(number):
-    if not number.isdigit():
-        raise ValueError("You must enter a number.")
-    return True
-
-def validate_decimal(number):
-    if not number.isdecimal():
-        raise ValueError("You must enter a decimal number.")
-    return True
-
-
 def ask_for_input(message, validate_function=None):
     if validate_function is None:
         return view.get_input(message)
@@ -90,7 +53,8 @@ def ask_for_password(message, validate_function=None):
 
 def get_token():
     if not TOKEN or not SECRET_KEY:
-        raise ValueError("TOKEN or SECRET_KEY not found in environment variables.")
+        raise ValueError("TOKEN or SECRET_KEY not found in environment variables. "
+                         "Try to log again")
     try:
         token = TOKEN
         payload = jwt.decode(token, SECRET_KEY, algorithms=['HS256'])

@@ -1,7 +1,8 @@
 from unittest.mock import MagicMock
 
-from controllers.collaborator_controller import choose_from_enum, get_id_from_enum_role
+from controllers.collaborator_controller import get_id_from_enum_role
 from utils.permissions import RoleType
+from utils.util import choose_from_enum
 
 
 def test_choose_from_enum(mocker):

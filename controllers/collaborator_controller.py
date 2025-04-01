@@ -2,6 +2,7 @@ from argon2.exceptions import VerifyMismatchError
 from sqlalchemy import select, or_
 from sqlalchemy.orm import Session
 
+import validator
 from cli import cli
 from db_config import engine
 from models.collaborator import Collaborator, Role
@@ -25,16 +26,16 @@ def get_id_from_enum_role(role, session):
 
 
 @cli.command()
-@permission(ActionType.CREATE, ResourceType.COLLABORATOR)
+@permission(ActionType.CREATE, resource=ResourceType.COLLABORATOR)
 @login_required()
 def create_collaborator():
     """Create a new collaborator"""
     with Session(engine) as session:
         collaborator_email = util.ask_for_input(
-            "Enter the collaborator email", util.validate_email
+            "Enter the collaborator email", validator.validate_email
         )
         collaborator_phone_number = util.ask_for_input(
-            "Enter the collaborator phone number ", util.validate_phone_number
+            "Enter the collaborator phone number ", validator.validate_phone_number
         )
         collaborator = session.execute(
             select(Collaborator).where(
@@ -49,13 +50,13 @@ def create_collaborator():
             return
 
         collaborator_password = util.ask_for_password(
-            "Enter the collaborator password ", util.validate_password
+            "Enter the collaborator password ", validator.validate_password
         )
         collaborator_name = util.ask_for_input(
-            "Enter the collaborator last_name ", util.validate_name
+            "Enter the collaborator last_name ", validator.validate_name
         )
         collaborator_first_name = util.ask_for_input(
-            "Enter the collaborator first name ", util.validate_name
+            "Enter the collaborator first name ", validator.validate_name
         )
 
         role = util.choose_from_enum(RoleType)
@@ -89,7 +90,7 @@ def ask_collaborator_id(session):
 
 
 @cli.command()
-@permission(ActionType.UPDATE_ALL, ResourceType.COLLABORATOR)
+@permission(ActionType.UPDATE_ALL, resource=ResourceType.COLLABORATOR)
 @login_required()
 def update_collaborator():
     """Update collaborator"""
@@ -100,7 +101,7 @@ def update_collaborator():
             view.display_error("No collaborator found.")
             return
 
-        view.display_message(f"Updating {collaborator}")
+        view.display_message(f"Updating\n{collaborator}", "blue")
         while True:
             choice = int(view.display_edit_collaborator())
             if 0 <= choice <= 6:
@@ -108,19 +109,19 @@ def update_collaborator():
                     break
                 elif choice == 1:
                     collaborator.first_name = util.ask_for_input("First name ",
-                                                                 util.validate_name)
+                                                                 validator.validate_name)
                 elif choice == 2:
                     collaborator.name = util.ask_for_input("Last name ",
-                                                           util.validate_name)
+                                                           validator.validate_name)
                 elif choice == 3:
                     collaborator.email = util.ask_for_input("Email ",
-                                                            util.validate_email)
+                                                            validator.validate_email)
                 elif choice == 4:
                     collaborator.password = util.hash_password(util.ask_for_password(
-                        "Password ", util.validate_password))
+                        "Password ", validator.validate_password))
                 elif choice == 5:
                     collaborator.phone_number = util.ask_for_input("Phone number ",
-                                                                   util.validate_phone_number)
+                                                                   validator.validate_phone_number)
                 elif choice == 6:
                     role = util.choose_from_enum(RoleType)
                     role_id = get_id_from_enum_role(role, session)
@@ -132,7 +133,7 @@ def update_collaborator():
 
 
 @cli.command()
-@permission(ActionType.DELETE, ResourceType.COLLABORATOR)
+@permission(ActionType.DELETE, resource=ResourceType.COLLABORATOR)
 @login_required(pass_token=True)
 def delete_collaborator(token):
     """Delete collaborator"""

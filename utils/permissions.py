@@ -170,20 +170,20 @@ def login_required(pass_token=False):
     return decorator
 
 
-def permission(action, resource):
+def permission(*actions, resource):
     def decorator(func):
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
             try:
                 token = util.get_token()
-                if PermissionManager.has_permission(RoleType(token["role"]), action,
-                                                    resource):
-                    return func(*args, **kwargs)
-                else:
-                    view.display_error(
-                        f"You do not have permission to perform {action.name} on"
-                        f" {resource.name}.")
-                    return
+                for action in actions:
+                    if PermissionManager.has_permission(RoleType(token["role"]), action,
+                                                        resource):
+                        return func(*args, **kwargs)
+                actions_str = " or ".join(action.name for action in actions)
+                view.display_error(
+                    f"You do not have permission to perform {actions_str} on"
+                    f" {resource.name}.")
             except Exception as e:
                 view.display_error(str(e))
 

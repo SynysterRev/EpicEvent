@@ -2,7 +2,7 @@ import os
 from getpass import getpass
 import click
 import secrets
-from db_config import DB_NAME, DB_PORT, DB_PASSWORD, DB_HOSTNAME, SECRET_KEY
+from db_config import DB_NAME, DB_PORT, DB_PASSWORD, DB_USER, SECRET_KEY
 
 
 @click.group()
@@ -22,9 +22,9 @@ def init():
     Create database and tables
     """
     print("Registering init command")
-    db_hostname = DB_HOSTNAME
-    if db_hostname == "":
-        db_hostname = input("Database hostname: ")
+    db_user = DB_USER
+    if db_user == "":
+        db_user = input("Database user: ")
 
     db_password = DB_PASSWORD
     if db_password == "":
@@ -32,7 +32,7 @@ def init():
 
     db_port = DB_PORT
     if db_port == "":
-        db_port = input("Database port (5432 by default, left empty to use it) : ") or 5432
+        db_port = input("Database port (5432 by default) : ") or 5432
 
     db_name = DB_NAME
     if db_name == "":
@@ -45,7 +45,7 @@ def init():
     try:
         click.echo("Creating .env file...")
         with open('.env', 'w') as env:
-            env.write(f"DB_HOSTNAME='{db_hostname}'\n")
+            env.write(f"DB_USER='{db_user}'\n")
             env.write(f"DB_PASSWORD='{db_password}'\n")
             env.write(f"DB_PORT='{db_port}'\n")
             env.write(f"DB_NAME='{db_name}'\n")

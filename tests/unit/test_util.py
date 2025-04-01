@@ -8,10 +8,12 @@ from argon2 import PasswordHasher
 from jwt import ExpiredSignatureError
 
 from utils.permissions import RoleType
-from utils.util import (validate_name, validate_email, verify_password,
-                        hash_password, validate_phone_number, validate_password,
+from utils.util import (verify_password,
+                        hash_password,
                         ask_for_input, ask_for_password, write_env_variable,
                         create_token, get_token)
+from validator import (validate_name, validate_email, validate_phone_number,
+                       validate_password, )
 
 
 def test_hash_password():
@@ -335,4 +337,3 @@ def test_get_token_expired(mocker):
         token = get_token()
 
     assert "Token expired. Please log in again."
-
