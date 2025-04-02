@@ -79,7 +79,8 @@ def create_contract():
             return
 
         total_amount = util.ask_for_input("Total amount ", validator.validate_decimal)
-        remaining_amount = util.ask_for_input("Total amount ", validator.validate_decimal)
+        remaining_amount = util.ask_for_input("Remaining amount ",
+                                              validator.validate_decimal)
         status = util.choose_from_enum(Status)
         contract = Contract(total_amount, remaining_amount, status,
                             client_id, sales_contact_id)
@@ -122,7 +123,7 @@ def update_contract(token):
                                                            validator.validate_decimal)
                 elif choice == 2:
                     contract.remaining_amount = util.ask_for_input("Remaining amount ",
-                                                      validator.validate_email)
+                                                      validator.validate_decimal)
                 elif choice == 3:
                     contract.status = util.choose_from_enum(Status)
                 elif choice == 4:

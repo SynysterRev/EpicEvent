@@ -120,11 +120,11 @@ def update_event(token):
             if event.support_contact_id != token["id"]:
                 view.display_error("You are not authorized to update an event to which you are not assigned.")
                 return
-
+        max_choice = 8 if is_manager else 6
         view.display_message(f"Updating\n{event}", "blue")
         while True:
             choice = int(view.display_edit_event(is_manager))
-            if 0 <= choice <= 8:
+            if 0 <= choice <= max_choice:
                 if choice == 0:
                     break
                 elif choice == 1:
