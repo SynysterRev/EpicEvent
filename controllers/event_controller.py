@@ -111,7 +111,6 @@ def update_event(token):
         if not event:
             view.display_error(f"Event with id {event_id} does not exist.")
             return
-        # if update mine check event
 
         is_manager = PermissionManager.has_permission(RoleType(
             token["role"]), ActionType.UPDATE_ALL, resource=ResourceType.EVENT)
