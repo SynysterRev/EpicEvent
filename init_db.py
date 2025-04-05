@@ -1,8 +1,10 @@
 from getpass import getpass
 
 import psycopg2
+import sentry_sdk
 from sqlalchemy import create_engine, insert, select, text
 
+import views.view
 from db_config import DB_NAME, DB_PORT, DB_USER
 from models import Base
 from models.collaborator import Role
@@ -93,10 +95,12 @@ def init_db():
                 print("RoleType tables populated.")
                 conn.close()
         except Exception as e:
-            print(f"Error when trying to create tables : {e}")
+            sentry_sdk.capture_exception(e)
+            views.view.display_error(e)
 
     except Exception as e:
-        print("An error occured :", e)
+        sentry_sdk.capture_exception(e)
+        views.view.display_error(e)
 
 
 if __name__ == "__main__":

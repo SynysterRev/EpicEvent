@@ -1,4 +1,5 @@
 import click
+import sentry_sdk
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
