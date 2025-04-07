@@ -79,6 +79,7 @@ def create_collaborator():
             scope.set_extra("user_id", collaborator.id)
             scope.set_extra("email", collaborator.email)
             scope.set_extra("role", collaborator.role.name.value)
+            scope.fingerprint = [str(collaborator.id), "create_collaborator"]
 
             sentry_sdk.capture_message(f"New collaborator created {collaborator_email}",
                                        level="info")
@@ -140,6 +141,17 @@ def update_collaborator():
             else:
                 view.display_error("Invalid choice.")
         session.commit()
+        with sentry_sdk.new_scope() as scope:
+            scope.set_tag("action", "create_collaborator")
+
+            scope.set_extra("user_id", collaborator.id)
+            scope.set_extra("email", collaborator.email)
+            scope.set_extra("role", collaborator.role.name.value)
+            scope.set_extra("collab", str(collaborator))
+            scope.fingerprint = [str(collaborator.id), "update_collaborator"]
+
+            sentry_sdk.capture_message(f"Collaborator update {collaborator.email}",
+                                       level="info")
         view.display_message(f"{collaborator} has been updated.", "green")
 
 

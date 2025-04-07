@@ -1,4 +1,5 @@
 import click
+import sentry_sdk
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -86,6 +87,17 @@ def create_contract():
                             client_id, sales_contact_id)
         session.add(contract)
         session.commit()
+        if status == Status.SIGNED:
+            with sentry_sdk.new_scope() as scope:
+                scope.set_tag("action", "sign_contract")
+
+                scope.set_extra("contract_id", contract.id)
+                scope.set_extra("client_id", client_id)
+                scope.fingerprint = [str(contract.id), "sign_contract"]
+
+                sentry_sdk.capture_message(
+                    f"New contract signed {contract.id}",
+                    level="info")
 
 
 @cli.command()
@@ -143,6 +155,17 @@ def update_contract(token):
             else:
                 view.display_error("Invalid choice.")
         session.commit()
+        if contract.status == Status.SIGNED:
+            with sentry_sdk.new_scope() as scope:
+                scope.set_tag("action", "sign_contract")
+
+                scope.set_extra("contract_id", contract.id)
+                scope.set_extra("client_id", client_id)
+                scope.fingerprint = [str(contract.id), "sign_contract"]
+
+                sentry_sdk.capture_message(
+                    f"New contract signed {contract.id}",
+                    level="info")
         view.display_message(f"{contract} has been updated.", "green")
 
 
