@@ -10,8 +10,15 @@ from models.client import Client
 from models.collaborator import Collaborator
 from models.contract import Contract, Status
 from utils import util
-from utils.permissions import login_required, permission, ActionType, ResourceType, \
-    RoleType, check_filters, PermissionManager
+from utils.permissions import (
+    login_required,
+    permission,
+    ActionType,
+    ResourceType,
+    RoleType,
+    check_filters,
+    PermissionManager,
+)
 from views import view
 
 
@@ -36,7 +43,19 @@ from views import view
 @check_filters(ResourceType.CONTRACT, "status", "remaining_amount", "assigned")
 @login_required(pass_token=True)
 def get_contracts(token, status, remaining_amount, assigned):
-    """Get all contracts"""
+    """Get all contracts
+
+    Args:
+        token (str): The token of the current user.
+        status (str, optional): Filter contracts by status. Defaults to None.
+                                 This is enabled by using the --status flag.
+        remaining_amount (bool, optional): Display only contracts with remaining amount.
+                                            Defaults to False.
+                                            This is enabled by using the --remaining-amount flag.
+        assigned (bool, optional): If True, only return contracts assigned to the current user.
+                                    Defaults to False.
+                                    This is enabled by using the --assigned flag.
+    """
     with Session(engine) as session:
         select_stmt = select(Contract)
         if status:
@@ -50,7 +69,8 @@ def get_contracts(token, status, remaining_amount, assigned):
                 view.display_error(f"No id stocked in the current token.")
                 return
             select_stmt = select_stmt.where(
-                Contract.sales_contact_id == collaborator_id)
+                Contract.sales_contact_id == collaborator_id
+            )
         contracts = session.execute(select_stmt).scalars().all()
         if not contracts:
             view.display_message(f"No contracts found.")
@@ -72,37 +92,32 @@ def create_contract():
         sales_contact_id = client.sales_contact_id
         collaborator = session.get(Collaborator, sales_contact_id)
         if not collaborator:
-            view.display_error(f"Collaborator with id {sales_contact_id} does not "
-                               f"exist. Check the client sales contact ID.")
+            view.display_error(
+                f"Collaborator with id {sales_contact_id} does not "
+                f"exist. Check the client sales contact ID."
+            )
             return
         if collaborator.role.name != RoleType.SALES:
             view.display_error(f"This collaborator cannot be assigned to a contract.")
             return
 
         total_amount = util.ask_for_input("Total amount ", validator.validate_decimal)
-        remaining_amount = util.ask_for_input("Remaining amount ",
-                                              validator.validate_decimal)
+        remaining_amount = util.ask_for_input(
+            "Remaining amount ", validator.validate_decimal
+        )
         status = util.choose_from_enum(Status)
-        contract = Contract(total_amount, remaining_amount, status,
-                            client_id, sales_contact_id)
+        contract = Contract(
+            total_amount, remaining_amount, status, client_id, sales_contact_id
+        )
+
         session.add(contract)
         session.commit()
-        if status == Status.SIGNED:
-            with sentry_sdk.new_scope() as scope:
-                scope.set_tag("action", "sign_contract")
-
-                scope.set_extra("contract_id", contract.id)
-                scope.set_extra("client_id", client_id)
-                scope.fingerprint = [str(contract.id), "sign_contract"]
-
-                sentry_sdk.capture_message(
-                    f"New contract signed {contract.id}",
-                    level="info")
 
 
 @cli.command()
-@permission(ActionType.UPDATE_ALL,ActionType.UPDATE_MINE,
-            resource=ResourceType.CONTRACT)
+@permission(
+    ActionType.UPDATE_ALL, ActionType.UPDATE_MINE, resource=ResourceType.CONTRACT
+)
 @login_required(pass_token=True)
 def update_contract(token):
     """Update a contract"""
@@ -113,16 +128,17 @@ def update_contract(token):
             view.display_error(f"Contract with id {contract_id} does not exist.")
             return
 
-        is_manager = PermissionManager.has_permission(RoleType(
-            token["role"]), ActionType.UPDATE_ALL, resource=ResourceType.EVENT)
+        is_manager = PermissionManager.has_permission(
+            RoleType(token["role"]), ActionType.UPDATE_ALL, resource=ResourceType.EVENT
+        )
 
         if not is_manager:
             if contract.sales_contact_id != token["id"]:
                 view.display_error(
                     "You are not authorized to update an contract to which you are not "
-                    "assigned.")
+                    "assigned."
+                )
                 return
-
 
         view.display_message(f"Updating\n{contract}", "blue")
         while True:
@@ -131,22 +147,26 @@ def update_contract(token):
                 if choice == 0:
                     break
                 elif choice == 1:
-                    contract.total_amount = util.ask_for_input("Total amount ",
-                                                           validator.validate_decimal)
+                    contract.total_amount = util.ask_for_input(
+                        "Total amount ", validator.validate_decimal
+                    )
                 elif choice == 2:
-                    contract.remaining_amount = util.ask_for_input("Remaining amount ",
-                                                      validator.validate_decimal)
+                    contract.remaining_amount = util.ask_for_input(
+                        "Remaining amount ", validator.validate_decimal
+                    )
                 elif choice == 3:
                     contract.status = util.choose_from_enum(Status)
                 elif choice == 4:
-                    client_id = util.ask_for_input("Client ID ",
-                                                    validator.validate_digit)
+                    client_id = util.ask_for_input(
+                        "Client ID ", validator.validate_digit
+                    )
                     if session.get(Client, client_id):
                         contract.client_id = client_id
                 # do the client need to be changed too ?
                 elif choice == 5:
-                    sales_id = util.ask_for_input("Sales contact ID ",
-                                                  validator.validate_digit)
+                    sales_id = util.ask_for_input(
+                        "Sales contact ID ", validator.validate_digit
+                    )
                     collaborator = session.get(Collaborator, sales_id)
                     if collaborator and collaborator.role.name == RoleType.SALES:
                         contract.sales_contact_id = sales_id
@@ -155,18 +175,4 @@ def update_contract(token):
             else:
                 view.display_error("Invalid choice.")
         session.commit()
-        if contract.status == Status.SIGNED:
-            with sentry_sdk.new_scope() as scope:
-                scope.set_tag("action", "sign_contract")
-
-                scope.set_extra("contract_id", contract.id)
-                scope.set_extra("client_id", client_id)
-                scope.fingerprint = [str(contract.id), "sign_contract"]
-
-                sentry_sdk.capture_message(
-                    f"New contract signed {contract.id}",
-                    level="info")
         view.display_message(f"{contract} has been updated.", "green")
-
-
-

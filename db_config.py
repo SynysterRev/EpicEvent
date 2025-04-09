@@ -13,8 +13,9 @@ DB_NAME = os.getenv("DB_NAME")
 SECRET_KEY = os.getenv("SECRET_KEY")
 TOKEN = os.getenv("TOKEN")
 
-db_url = (f"postgresql+psycopg2://{DB_USER}:{DB_PASSWORD}@localhost:{DB_PORT}"
-          f"/{DB_NAME}")
+db_url = (
+    f"postgresql+psycopg2://{DB_USER}:{DB_PASSWORD}@localhost:{DB_PORT}" f"/{DB_NAME}"
+)
 
 if db_url is None:
     raise ValueError("Environment variables must be set")

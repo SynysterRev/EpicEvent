@@ -8,30 +8,41 @@ from models import Base
 
 
 class Event(Base):
-    __tablename__ = 'event'
+    __tablename__ = "event"
 
-    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True,
-                                    nullable=False)
+    id: Mapped[int] = mapped_column(
+        primary_key=True, autoincrement=True, nullable=False
+    )
     start_date: Mapped[datetime.date] = mapped_column(Date, nullable=False)
     start_time: Mapped[datetime.time] = mapped_column(Time, nullable=False)
     end_date: Mapped[datetime.date] = mapped_column(Date, nullable=False)
     end_time: Mapped[datetime.time] = mapped_column(Time, nullable=False)
     location: Mapped[str] = mapped_column(String(200), nullable=False)
     attendees: Mapped[int] = mapped_column(nullable=False)
-    contract_id: Mapped[int] = mapped_column(ForeignKey('contract.id',
-                                                        ondelete='CASCADE'),
-                                             nullable=False)
-    contract: Mapped["Contract"] = relationship('Contract', backref=backref(
-        'events', uselist=False))
-    support_contact_id: Mapped[int] = mapped_column(ForeignKey('collaborator.id',
-                                                             ondelete='SET NULL'),
-                                                  nullable=True)
-    collaborator: Mapped["Collaborator"] = relationship("Collaborator",
-                                                        back_populates='events')
+    contract_id: Mapped[int] = mapped_column(
+        ForeignKey("contract.id", ondelete="CASCADE"), nullable=False
+    )
+    contract: Mapped["Contract"] = relationship(
+        "Contract", backref=backref("events", uselist=False)
+    )
+    support_contact_id: Mapped[int] = mapped_column(
+        ForeignKey("collaborator.id", ondelete="SET NULL"), nullable=True
+    )
+    collaborator: Mapped["Collaborator"] = relationship(
+        "Collaborator", back_populates="events"
+    )
 
-
-    def __init__(self, start_date, start_time, end_date, end_time, location,
-                 attendees, contract_id, support_contact_id):
+    def __init__(
+        self,
+        start_date,
+        start_time,
+        end_date,
+        end_time,
+        location,
+        attendees,
+        contract_id,
+        support_contact_id,
+    ):
         super().__init__()
         self.start_date = start_date
         self.start_time = start_time
@@ -41,7 +52,6 @@ class Event(Base):
         self.attendees = attendees
         self.contract_id = contract_id
         self.support_contact_id = support_contact_id
-
 
     def __str__(self):
         support_contact_info = (

@@ -49,7 +49,6 @@ def create_collaborator():
         if collaborator:
             view.display_error("This email or phone number already exists.")
             return
-
         collaborator_password = util.ask_for_password(
             "Enter the collaborator password ", validator.validate_password
         )
@@ -81,14 +80,13 @@ def create_collaborator():
             scope.set_extra("role", collaborator.role.name.value)
             scope.fingerprint = [str(collaborator.id), "create_collaborator"]
 
-            sentry_sdk.capture_message(f"New collaborator created {collaborator_email}",
-                                       level="info")
+            sentry_sdk.capture_message(
+                f"New collaborator created {collaborator_email}", level="info"
+            )
 
 
 def ask_collaborator_id(session):
-    email_phone = util.ask_for_input(
-        "Enter the collaborator email or phone number "
-    )
+    email_phone = util.ask_for_input("Enter the collaborator email or phone number ")
     collaborator = session.execute(
         select(Collaborator).where(
             or_(
@@ -120,20 +118,25 @@ def update_collaborator():
                 if choice == 0:
                     break
                 elif choice == 1:
-                    collaborator.first_name = util.ask_for_input("First name ",
-                                                                 validator.validate_name)
+                    collaborator.first_name = util.ask_for_input(
+                        "First name ", validator.validate_name
+                    )
                 elif choice == 2:
-                    collaborator.name = util.ask_for_input("Last name ",
-                                                           validator.validate_name)
+                    collaborator.name = util.ask_for_input(
+                        "Last name ", validator.validate_name
+                    )
                 elif choice == 3:
-                    collaborator.email = util.ask_for_input("Email ",
-                                                            validator.validate_email)
+                    collaborator.email = util.ask_for_input(
+                        "Email ", validator.validate_email
+                    )
                 elif choice == 4:
-                    collaborator.password = util.hash_password(util.ask_for_password(
-                        "Password ", validator.validate_password))
+                    collaborator.password = util.hash_password(
+                        util.ask_for_password("Password ", validator.validate_password)
+                    )
                 elif choice == 5:
-                    collaborator.phone_number = util.ask_for_input("Phone number ",
-                                                                   validator.validate_phone_number)
+                    collaborator.phone_number = util.ask_for_input(
+                        "Phone number ", validator.validate_phone_number
+                    )
                 elif choice == 6:
                     role = util.choose_from_enum(RoleType)
                     role_id = get_id_from_enum_role(role, session)
@@ -141,17 +144,6 @@ def update_collaborator():
             else:
                 view.display_error("Invalid choice.")
         session.commit()
-        with sentry_sdk.new_scope() as scope:
-            scope.set_tag("action", "create_collaborator")
-
-            scope.set_extra("user_id", collaborator.id)
-            scope.set_extra("email", collaborator.email)
-            scope.set_extra("role", collaborator.role.name.value)
-            scope.set_extra("collab", str(collaborator))
-            scope.fingerprint = [str(collaborator.id), "update_collaborator"]
-
-            sentry_sdk.capture_message(f"Collaborator update {collaborator.email}",
-                                       level="info")
         view.display_message(f"{collaborator} has been updated.", "green")
 
 
@@ -168,7 +160,8 @@ def delete_collaborator(token):
             return
 
         choice = util.ask_for_input(
-            f"Are you sure you want to delete {collaborator} ? Y/N").lower()
+            f"Are you sure you want to delete {collaborator} ? Y/N"
+        ).lower()
         if choice in ("y", "yes"):
             session.delete(collaborator)
             session.commit()
@@ -206,6 +199,7 @@ def login():
 def logout():
     """Log the user out."""
     logout_user()
+
 
 def logout_user():
     util.delete_token()

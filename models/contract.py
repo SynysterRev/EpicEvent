@@ -14,27 +14,34 @@ class Status(enum.Enum):
 
 
 class Contract(Base):
-    __tablename__ = 'contract'
+    __tablename__ = "contract"
 
-    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True,
-                                    nullable=False)
-    total_amount: Mapped[int] = mapped_column(nullable=False)
-    remaining_amount: Mapped[int] = mapped_column(nullable=False)
+    id: Mapped[int] = mapped_column(
+        primary_key=True, autoincrement=True, nullable=False
+    )
+    total_amount: Mapped[float] = mapped_column(nullable=False)
+    remaining_amount: Mapped[float] = mapped_column(nullable=False)
     creation_date: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
     status: Mapped[Status] = mapped_column(Enum(Status), nullable=False)
-    client_id: Mapped[int] = mapped_column(ForeignKey('client.id',
-                                                      ondelete='RESTRICT', ),
-                                           nullable=False)
-    client: Mapped["Client"] = relationship("Client", back_populates='contracts')
+    client_id: Mapped[int] = mapped_column(
+        ForeignKey(
+            "client.id",
+            ondelete="RESTRICT",
+        ),
+        nullable=False,
+    )
+    client: Mapped["Client"] = relationship("Client", back_populates="contracts")
 
     sales_contact_id: Mapped[int] = mapped_column(
-        ForeignKey('collaborator.id', ondelete='SET NULL'),
-        nullable=True)
-    collaborator: Mapped["Collaborator"] = relationship("Collaborator",
-                                                        back_populates='contracts')
+        ForeignKey("collaborator.id", ondelete="SET NULL"), nullable=True
+    )
+    collaborator: Mapped["Collaborator"] = relationship(
+        "Collaborator", back_populates="contracts"
+    )
 
-    def __init__(self, total_amount, remaining_amount, status, client_id,
-                 sales_contact_id=None):
+    def __init__(
+        self, total_amount, remaining_amount, status, client_id, sales_contact_id=None
+    ):
         super().__init__()
         self.total_amount = total_amount
         self.remaining_amount = remaining_amount
@@ -42,12 +49,12 @@ class Contract(Base):
         self.client_id = client_id
         self.sales_contact_id = sales_contact_id
 
-
-
     def __repr__(self):
-        return (f"Contract {self.id} for client {self.client.full_name} is "
-                f"{self.status.value}.\n "
-                f"Total amount {self.total_amount}€, remaining amount"
-                f" {self.remaining_amount}€."
-                f" Sales contact {self.collaborator.first_name}"
-                f" {self.collaborator.name}.")
+        return (
+            f"Contract {self.id} for client {self.client.full_name} is "
+            f"{self.status.value}.\n "
+            f"Total amount {self.total_amount}€, remaining amount"
+            f" {self.remaining_amount}€."
+            f" Sales contact {self.collaborator.first_name}"
+            f" {self.collaborator.name}."
+        )

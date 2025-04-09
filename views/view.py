@@ -12,7 +12,7 @@ def get_password(message):
 
 
 def display_error(message):
-    click.secho(message, fg='red')
+    click.secho(message, fg="red")
 
 
 def display_message(message, color=None):
@@ -27,7 +27,8 @@ def display_edit_collaborator():
         "4. Edit password\n"
         "5. Edit phone number\n"
         "6. Edit role\n"
-        "0. Quit\n")
+        "0. Quit\n"
+    )
     return choice
 
 
@@ -38,7 +39,8 @@ def display_edit_client():
         "3. Edit phone number\n"
         "4. Edit company\n"
         "5. Edit sales contact\n"
-        "0. Quit\n")
+        "0. Quit\n"
+    )
     return choice
 
 
@@ -49,20 +51,22 @@ def display_edit_contract():
         "3. Edit status\n"
         "4. Edit client_id\n"
         "5. Edit sales contact id\n"
-        "0. Quit\n")
+        "0. Quit\n"
+    )
     return choice
 
 
 def display_edit_event(is_manager):
-    choices = ("1. Edit start date\n"
+    choices = (
+        "1. Edit start date\n"
         "2. Edit start time\n"
         "3. Edit end date\n"
         "4. Edit end time\n"
         "5. Edit location\n"
-        "6. Edit number attendees\n")
+        "6. Edit number attendees\n"
+    )
     if is_manager:
-        choices += ("7. Edit contract id\n"
-        "8. Edit support contact id\n")
+        choices += "7. Edit contract id\n" "8. Edit support contact id\n"
     choices += "0. Quit\n"
     choice = click.prompt(choices)
     return choice

@@ -12,8 +12,13 @@ from models.contract import Contract, Status
 from models.event import Event
 from utils import util
 from utils.permissions import PermissionManager
-from utils.permissions import login_required, permission, ActionType, ResourceType, \
-    RoleType
+from utils.permissions import (
+    login_required,
+    permission,
+    ActionType,
+    ResourceType,
+    RoleType,
+)
 from views import view
 
 
@@ -27,14 +32,25 @@ from views import view
 @permission(ActionType.READ, resource=ResourceType.EVENT)
 @login_required(pass_token=True)
 def get_events(token, assign):
-    """Get all events"""
+    """Get all events
+
+    Args:
+        token (str): The token of the current user.
+        assign (str, optional): Filter events based on assignment.
+            - "all": Returns all events.
+            - "assigned": Returns events assigned to the current user.
+            - "no-contact": Returns events without a support contact.
+            Defaults to "all".
+            This is enabled by using the --assign flag.
+    """
     with Session(engine) as session:
         stmt = select(Event)
         try:
             collaborator_id = token["id"]
         except KeyError:
             view.display_error(
-                f"No id stocked in the current token. Try to login again.")
+                f"No id stocked in the current token. Try to login again."
+            )
             return
         if assign == "assigned":
             stmt = stmt.where(Event.support_contact_id == collaborator_id)
@@ -66,15 +82,17 @@ def create_event(token):
 
         if token_id != contract.sales_contact_id:
             view.display_error(
-                "You are not authorized to create events for this contract.")
+                "You are not authorized to create events for this contract."
+            )
             return
 
         if contract.status != Status.SIGNED:
             view.display_error("The contract must be signed in order to create events.")
             return
 
-        start_date = util.ask_for_input("Start date (yyyy-mm-dd)",
-                                        validator.validate_date)
+        start_date = util.ask_for_input(
+            "Start date (yyyy-mm-dd)", validator.validate_date
+        )
         start_time = util.ask_for_input("Start time (HH:MM)", validator.validate_time)
 
         end_date = util.ask_for_input("End date (yyyy-mm-dd)", validator.validate_date)
@@ -88,15 +106,23 @@ def create_event(token):
         if support_id:
             collaborator = session.get(Collaborator, support_id)
             if not collaborator:
-                view.display_error(f"Collaborator with id {support_id} does not "
-                                   f"exist.")
+                view.display_error(
+                    f"Collaborator with id {support_id} does not " f"exist."
+                )
                 return
             if collaborator.role.name != RoleType.SUPPORT:
                 view.display_error(f"This collaborator cannot be assigned to a event.")
                 return
-
-        event = Event(start_date, start_time, end_date, end_time, location,
-                      attendees, contract_id, support_id)
+        event = Event(
+            start_date,
+            start_time,
+            end_date,
+            end_time,
+            location,
+            attendees,
+            contract_id,
+            support_id,
+        )
         session.add(event)
         session.commit()
 
@@ -112,13 +138,14 @@ def update_event(token):
         if not event:
             view.display_error(f"Event with id {event_id} does not exist.")
             return
-
-        is_manager = PermissionManager.has_permission(RoleType(
-            token["role"]), ActionType.UPDATE_ALL, resource=ResourceType.EVENT)
-
+        is_manager = PermissionManager.has_permission(
+            RoleType(token["role"]), ActionType.UPDATE_ALL, resource=ResourceType.EVENT
+        )
         if not is_manager:
             if event.support_contact_id != token["id"]:
-                view.display_error("You are not authorized to update an event to which you are not assigned.")
+                view.display_error(
+                    "You are not authorized to update an event to which you are not assigned."
+                )
                 return
         max_choice = 8 if is_manager else 6
         view.display_message(f"Updating\n{event}", "blue")
@@ -128,33 +155,41 @@ def update_event(token):
                 if choice == 0:
                     break
                 elif choice == 1:
-                    event.start_date = util.ask_for_input("Start date",
-                                                          validator.validate_date)
+                    event.start_date = util.ask_for_input(
+                        "Start date", validator.validate_date
+                    )
                 elif choice == 2:
-                    event.start_time = util.ask_for_input("Start time",
-                                                          validator.validate_time)
+                    event.start_time = util.ask_for_input(
+                        "Start time", validator.validate_time
+                    )
                 elif choice == 3:
-                    event.end_date = util.ask_for_input("End date",
-                                                        validator.validate_date)
+                    event.end_date = util.ask_for_input(
+                        "End date", validator.validate_date
+                    )
                 elif choice == 4:
-                    event.end_time = util.ask_for_input("End time",
-                                                        validator.validate_date)
+                    event.end_time = util.ask_for_input(
+                        "End time", validator.validate_date
+                    )
                 elif choice == 5:
                     event.location = util.ask_for_input("Location")
                 elif choice == 6:
-                    event.attendees = util.ask_for_input("Attendees",
-                                                         validator.validate_digit)
+                    event.attendees = util.ask_for_input(
+                        "Attendees", validator.validate_digit
+                    )
                 elif choice == 7:
-                    contract_id = util.ask_for_input("Contract ID ",
-                                                     validator.validate_digit)
+                    contract_id = util.ask_for_input(
+                        "Contract ID ", validator.validate_digit
+                    )
                     if session.get(Contract, contract_id):
                         event.contract_id = contract_id
                     else:
                         view.display_error(
-                            f"Contract with id {contract_id} does not exist.")
+                            f"Contract with id {contract_id} does not exist."
+                        )
                 elif choice == 8:
-                    collaborator_id = util.ask_for_input("Support ID ",
-                                                         validator.validate_digit)
+                    collaborator_id = util.ask_for_input(
+                        "Support ID ", validator.validate_digit
+                    )
                     collaborator = session.get(Collaborator, collaborator_id)
                     if collaborator and collaborator.role.name == RoleType.SUPPORT:
                         event.support_contact_id = collaborator_id

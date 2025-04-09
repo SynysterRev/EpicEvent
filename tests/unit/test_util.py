@@ -8,12 +8,22 @@ from argon2 import PasswordHasher
 from jwt import ExpiredSignatureError
 
 from utils.permissions import RoleType
-from utils.util import (verify_password,
-                        hash_password,
-                        ask_for_input, ask_for_password, write_env_variable,
-                        create_token, get_token)
-from validator import (validate_name, validate_email, validate_phone_number,
-                       validate_password, )
+from utils.util import (
+    verify_password,
+    hash_password,
+    ask_for_input,
+    ask_for_password,
+    write_env_variable,
+    create_token,
+    get_token,
+    choose_from_enum,
+)
+from validator import (
+    validate_name,
+    validate_email,
+    validate_phone_number,
+    validate_password,
+)
 
 
 def test_hash_password():
@@ -64,8 +74,10 @@ def test_validate_name_invalid():
     name = "1596a"
     with pytest.raises(ValueError) as e:
         validate_name(name)
-    assert str(e.value) == ("Your name must be at least 1 character long "
-                            "and only contains letters and -.")
+    assert str(e.value) == (
+        "Your name must be at least 1 character long and only "
+        "contains letters, spaces and -."
+    )
 
 
 def test_validate_phone():
@@ -100,7 +112,8 @@ def test_validate_password_invalid():
     assert str(e.value) == (
         "Your password must be at least 8 characters long, contains "
         "at least one uppercase letter, at least one lowercase "
-        "letter, at least one number, and at least one special character.")
+        "letter, at least one number, and at least one special character."
+    )
 
     password = "Azerty123"
     with pytest.raises(ValueError) as e:
@@ -108,7 +121,8 @@ def test_validate_password_invalid():
     assert str(e.value) == (
         "Your password must be at least 8 characters long, contains "
         "at least one uppercase letter, at least one lowercase "
-        "letter, at least one number, and at least one special character.")
+        "letter, at least one number, and at least one special character."
+    )
 
     password = "Azerty!"
     with pytest.raises(ValueError) as e:
@@ -116,7 +130,8 @@ def test_validate_password_invalid():
     assert str(e.value) == (
         "Your password must be at least 8 characters long, contains "
         "at least one uppercase letter, at least one lowercase "
-        "letter, at least one number, and at least one special character.")
+        "letter, at least one number, and at least one special character."
+    )
 
     password = "Aze123!"
     with pytest.raises(ValueError) as e:
@@ -124,11 +139,12 @@ def test_validate_password_invalid():
     assert str(e.value) == (
         "Your password must be at least 8 characters long, contains "
         "at least one uppercase letter, at least one lowercase "
-        "letter, at least one number, and at least one special character.")
+        "letter, at least one number, and at least one special character."
+    )
 
 
 def test_ask_for_input(mocker):
-    mock_input = mocker.patch('views.view.get_input', return_value="name")
+    mock_input = mocker.patch("views.view.get_input", return_value="name")
     result = ask_for_input("Enter input")
 
     assert result == "name"
@@ -137,7 +153,7 @@ def test_ask_for_input(mocker):
 
 
 def test_ask_for_input_with_function(mocker):
-    mock_input = mocker.patch('views.view.get_input', return_value="name")
+    mock_input = mocker.patch("views.view.get_input", return_value="name")
     result = ask_for_input("Enter input", validate_name)
 
     assert result == "name"
@@ -146,9 +162,10 @@ def test_ask_for_input_with_function(mocker):
 
 
 def test_ask_for_input_with_function_invalid(mocker):
-    mock_input = mocker.patch('views.view.get_input', side_effect=["name",
-                                                                   "Azerty123!"])
-    mock_display_error = mocker.patch('views.view.display_error')
+    mock_input = mocker.patch(
+        "views.view.get_input", side_effect=["name", "Azerty123!"]
+    )
+    mock_display_error = mocker.patch("views.view.display_error")
     result = ask_for_input("Enter input", validate_password)
 
     assert result == "Azerty123!"
@@ -159,7 +176,7 @@ def test_ask_for_input_with_function_invalid(mocker):
 
 
 def test_ask_for_password(mocker):
-    mock_input = mocker.patch('views.view.get_password', return_value="name")
+    mock_input = mocker.patch("views.view.get_password", return_value="name")
     result = ask_for_password("Enter password")
 
     assert result == "name"
@@ -168,7 +185,7 @@ def test_ask_for_password(mocker):
 
 
 def test_ask_for_password_with_function(mocker):
-    mock_input = mocker.patch('views.view.get_password', return_value="Azerty123!")
+    mock_input = mocker.patch("views.view.get_password", return_value="Azerty123!")
     result = ask_for_password("Enter password", validate_password)
 
     assert result == "Azerty123!"
@@ -177,9 +194,10 @@ def test_ask_for_password_with_function(mocker):
 
 
 def test_ask_for_password_with_function_invalid(mocker):
-    mock_input = mocker.patch('views.view.get_password', side_effect=["name",
-                                                                      "Azerty123!"])
-    mock_display_error = mocker.patch('views.view.display_error')
+    mock_input = mocker.patch(
+        "views.view.get_password", side_effect=["name", "Azerty123!"]
+    )
+    mock_display_error = mocker.patch("views.view.display_error")
     result = ask_for_password("Enter password", validate_password)
 
     assert result == "Azerty123!"
@@ -190,16 +208,16 @@ def test_ask_for_password_with_function_invalid(mocker):
 
 
 def test_write_env_var(mocker):
-    mocker.patch('os.path.exists', return_value=False)
+    mocker.patch("os.path.exists", return_value=False)
 
     mock_file = mock_open()
-    mocker.patch('builtins.open', mock_file)
+    mocker.patch("builtins.open", mock_file)
 
-    mock_reload = mocker.patch('db_config.reload_env')
+    mock_reload = mocker.patch("db_config.reload_env")
 
-    write_env_variable('NEW_VAR', 'new_value')
+    write_env_variable("NEW_VAR", "new_value")
 
-    mock_file.assert_called_with('.env', 'w')
+    mock_file.assert_called_with(".env", "w")
 
     handle = mock_file()
     expected_content = ["NEW_VAR='new_value'\n"]
@@ -207,61 +225,66 @@ def test_write_env_var(mocker):
 
 
 def test_write_env_var_new_variable(mock_env_file, mocker):
-    mocker.patch('os.path.exists', return_value=True)
+    mocker.patch("os.path.exists", return_value=True)
 
-    mock_file = mock_open(read_data=''.join(mock_env_file))
-    mocker.patch('builtins.open', mock_file)
+    mock_file = mock_open(read_data="".join(mock_env_file))
+    mocker.patch("builtins.open", mock_file)
 
-    mock_reload = mocker.patch('db_config.reload_env')
+    mock_reload = mocker.patch("db_config.reload_env")
 
-    write_env_variable('NEW_VAR', 'new_value')
+    write_env_variable("NEW_VAR", "new_value")
 
-    mock_file.assert_any_call('.env', 'r')
-    mock_file.assert_any_call('.env', 'w')
+    mock_file.assert_any_call(".env", "r")
+    mock_file.assert_any_call(".env", "w")
 
     handle = mock_file()
     expected_content = [
         "EXISTING_VAR='existing_value'\n",
         "ANOTHER_VAR='another_value'\n",
-        "NEW_VAR='new_value'\n"
+        "NEW_VAR='new_value'\n",
     ]
     handle.writelines.assert_called_once_with(expected_content)
 
 
 def test_write_env_var_update_variable(mock_env_file, mocker):
-    mocker.patch('os.path.exists', return_value=True)
+    mocker.patch("os.path.exists", return_value=True)
 
-    mock_file = mock_open(read_data=''.join(mock_env_file))
-    mocker.patch('builtins.open', mock_file)
+    mock_file = mock_open(read_data="".join(mock_env_file))
+    mocker.patch("builtins.open", mock_file)
 
-    mock_reload = mocker.patch('db_config.reload_env')
+    mock_reload = mocker.patch("db_config.reload_env")
 
-    write_env_variable('EXISTING_VAR', 'updated_value')
+    write_env_variable("EXISTING_VAR", "updated_value")
 
     handle = mock_file()
     expected_content = [
         "EXISTING_VAR='updated_value'\n",
-        "ANOTHER_VAR='another_value'\n"
+        "ANOTHER_VAR='another_value'\n",
     ]
     handle.writelines.assert_called_once_with(expected_content)
 
 
 def test_write_env_var_exception(mocker):
-    mocker.patch('os.path.exists', return_value=True)
-    mocker.patch('builtins.open', side_effect=Exception)
+    mocker.patch("os.path.exists", return_value=True)
+    mocker.patch("builtins.open", side_effect=Exception)
 
     with pytest.raises(Exception) as excinfo:
-        write_env_variable('TEST_VAR', 'test_value')
+        write_env_variable("TEST_VAR", "test_value")
 
     assert f"Error writing to '.env': {str(excinfo)}"
 
 
 def test_create_token(mocker):
-    secret_key = 'secret_key'
-    mocker.patch('utils.util.SECRET_KEY', secret_key)
+    secret_key = "secret_key"
+    mocker.patch("utils.util.SECRET_KEY", secret_key)
+
     collaborator = MagicMock()
+    collaborator.id = 123
     collaborator.first_name = "bob"
     collaborator.name = "bob"
+
+    collaborator.role = MagicMock()
+    collaborator.role.name = MagicMock()
     collaborator.role.name.value = RoleType.MANAGEMENT.value
 
     mock_write = mocker.patch("utils.util.write_env_variable")
@@ -279,7 +302,7 @@ def test_create_token(mocker):
 
 def test_create_token_invalid(mocker):
     secret_key = None
-    mocker.patch('utils.util.SECRET_KEY', secret_key)
+    mocker.patch("utils.util.SECRET_KEY", secret_key)
     collaborator = MagicMock()
 
     mock_write = mocker.patch("utils.util.write_env_variable")
@@ -290,17 +313,17 @@ def test_create_token_invalid(mocker):
 
 
 def test_get_token(mocker):
-    secret_key = 'secret_key'
-    mocker.patch('utils.util.SECRET_KEY', secret_key)
+    secret_key = "secret_key"
+    mocker.patch("utils.util.SECRET_KEY", secret_key)
     payload = {
         "first_name": "bob",
         "name": "bob",
         "role": "management",
-        "exp": datetime.now(tz=timezone.utc) + timedelta(minutes=15)
+        "exp": datetime.now(tz=timezone.utc) + timedelta(minutes=15),
     }
 
     fake_token = jwt.encode(payload, secret_key, algorithm="HS256")
-    mocker.patch('utils.util.TOKEN', fake_token)
+    mocker.patch("utils.util.TOKEN", fake_token)
 
     token = get_token()
 
@@ -312,7 +335,7 @@ def test_get_token(mocker):
 
 def test_get_token_missing_secret_key(mocker):
     secret_key = None
-    mocker.patch('utils.util.SECRET_KEY', secret_key)
+    mocker.patch("utils.util.SECRET_KEY", secret_key)
 
     with pytest.raises(ValueError) as e:
         token = get_token()
@@ -321,19 +344,62 @@ def test_get_token_missing_secret_key(mocker):
 
 
 def test_get_token_expired(mocker):
-    secret_key = 'secret_key'
-    mocker.patch('utils.util.SECRET_KEY', secret_key)
+    secret_key = "secret_key"
+    mocker.patch("utils.util.SECRET_KEY", secret_key)
     payload = {
         "first_name": "bob",
         "name": "bob",
         "role": "management",
-        "exp": datetime.now(tz=timezone.utc) - timedelta(minutes=15)
+        "exp": datetime.now(tz=timezone.utc) - timedelta(minutes=15),
     }
 
     fake_token = jwt.encode(payload, secret_key, algorithm="HS256")
-    mocker.patch('utils.util.TOKEN', fake_token)
+    mocker.patch("utils.util.TOKEN", fake_token)
 
     with pytest.raises(ExpiredSignatureError) as e:
         token = get_token()
 
     assert "Token expired. Please log in again."
+
+
+def test_choose_from_enum(mocker):
+    mock_display_message = mocker.patch("views.view.display_message")
+    mock_input = mocker.patch("views.view.get_input", return_value="1")
+    result = choose_from_enum(RoleType, "Select option")
+
+    assert result == RoleType.MANAGEMENT
+
+    mock_display_message.assert_any_call("Select option:")
+    mock_display_message.assert_any_call("1. MANAGEMENT")
+    mock_display_message.assert_any_call("2. SALES")
+    mock_display_message.assert_any_call("3. SUPPORT")
+
+    mock_input.assert_called_once_with("Enter the number of your choice")
+
+
+def test_invalid_choose_from_enum(mocker):
+    mocker.patch("views.view.display_message")
+    mock_input = mocker.patch("views.view.get_input", side_effect=["a", "1"])
+    mock_display_error = mocker.patch("views.view.display_error")
+
+    result = choose_from_enum(RoleType, "Select option")
+
+    assert result == RoleType.MANAGEMENT
+
+    assert mock_input.call_count == 2
+
+    mock_display_error.assert_called_once()
+
+
+def test_out_of_range_choose_from_enum(mocker):
+    mocker.patch("views.view.display_message")
+    mock_input = mocker.patch("views.view.get_input", side_effect=["4", "1"])
+    mock_display_error = mocker.patch("views.view.display_error")
+
+    result = choose_from_enum(RoleType, "Select option")
+
+    assert result == RoleType.MANAGEMENT
+
+    assert mock_input.call_count == 2
+
+    mock_display_error.assert_called_once()

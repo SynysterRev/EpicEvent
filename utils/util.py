@@ -53,11 +53,13 @@ def ask_for_password(message, validate_function=None):
 
 def get_token():
     if not TOKEN or not SECRET_KEY:
-        raise ValueError("TOKEN or SECRET_KEY not found in environment variables. "
-                         "Try to log again")
+        raise ValueError(
+            "TOKEN or SECRET_KEY not found in environment variables. "
+            "Try to log again"
+        )
     try:
         token = TOKEN
-        payload = jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
+        payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
         return payload
     except ExpiredSignatureError:
         raise ExpiredSignatureError("Token expired. Please log in again.")
@@ -69,7 +71,8 @@ def create_token(collaborator):
     secret_key = SECRET_KEY
     if secret_key is None:
         raise ValueError(
-            "SECRET_KEY not found in environment variables. Use the init command first.")
+            "SECRET_KEY not found in environment variables. Use the init command first."
+        )
     payload = {
         "id": collaborator.id,
         "first_name": collaborator.first_name,
@@ -81,18 +84,21 @@ def create_token(collaborator):
     write_env_variable("TOKEN", token)
     return token
 
+
 def delete_token():
     secret_key = SECRET_KEY
     if secret_key is None:
         raise ValueError(
-            "SECRET_KEY not found in environment variables. Use the init command first.")
+            "SECRET_KEY not found in environment variables. Use the init command first."
+        )
     write_env_variable("TOKEN", "")
 
+
 def write_env_variable(var_name, var_value):
-    env_file = '.env'
+    env_file = ".env"
     try:
         if os.path.exists(env_file):
-            with open(env_file, 'r') as env:
+            with open(env_file, "r") as env:
                 lines = env.readlines()
         else:
             lines = []
@@ -109,7 +115,7 @@ def write_env_variable(var_name, var_value):
         if not updated:
             new_lines.append(f"{var_name}='{var_value}'\n")
 
-        with open(env_file, 'w') as env:
+        with open(env_file, "w") as env:
             env.writelines(new_lines)
             reload_env()
     except PermissionError:

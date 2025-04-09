@@ -1,77 +1,188 @@
-from unittest.mock import MagicMock
+import os
+from datetime import date, time
 
-from sqlalchemy import create_engine
-from sqlalchemy.exc import ProgrammingError, OperationalError
 import pytest
-from sqlalchemy.orm import sessionmaker, declarative_base
+from click.testing import CliRunner
+from dotenv import load_dotenv
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 
-# DB_NAME = "epic_event_test"
-# DB_USER = "test_user"
-# DB_PASSWORD = "<PASSWORD>"
-#
-#
-# db_url = f"postgresql://{DB_USER}:{DB_PASSWORD}@localhost/{DB_NAME}"
-#
-# def db_prep():
-#     print("dropping the old test db…")
-#     engine = create_engine("postgresql://postgres@localhost/postgres")
-#     conn = engine.connect()
-#     try:
-#         conn = conn.execution_options(autocommit=False)
-#         conn.execute(f"DROP DATABASE {DB_NAME}")
-#     except ProgrammingError:
-#         print("Could not drop the database, probably does not exist.")
-#     except OperationalError:
-#         print(
-#             "Could not drop database because it's being accessed by other users (psql prompt open?)")
-#
-#     print(f"test db dropped! about to create {DB_NAME}")
-#     conn.execute(f"CREATE DATABASE {DB_NAME}")
-#
-#     try:
-#         conn.execute(f"create user {DB_USER} with encrypted password "
-#                      f"{DB_PASSWORD}")
-#     except:
-#         print("User already exists.")
-#
-#     conn.execute(
-#         f"grant all privileges on database {DB_NAME} to {DB_USER}")
-#
-#     conn.close()
-#     print("test db created")
-#
-#
-# @pytest.fixture(scope="session", autouse=True)
-# def fake_db():
-#     db_prep()
-#     print(f"initializing {DB_NAME}…")
-#     from models.collaborator import Collaborator, Role
-#     from models.event import Event
-#     from models.contract import Contract
-#     from models.client import Client
-#     from models import Base
-#
-#     engine = create_engine(db_url)
-#     Base.metadata.create_all(engine)
-#     SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-#     db = SessionLocal()
-#     print(f"{DB_NAME} ready to rock!")
-#     try:
-#         yield db
-#     finally:
-#         db.close()
+from models import Base
+from models.client import Client
+from models.collaborator import Collaborator, Role
+from models.contract import Contract, Status
+from models.event import Event
+from utils.permissions import RoleType
+
+load_dotenv()
+
+DB_USER = os.getenv("DB_USER")
+DB_PASSWORD = os.getenv("DB_PASSWORD")
+DB_PORT = os.getenv("DB_PORT")
+
+db_url = (
+    f"postgresql+psycopg2://{DB_USER}:{DB_PASSWORD}@localhost:{DB_PORT}"
+    f"/epic_events_test"
+)
 
 
-@pytest.fixture(scope="session", autouse=True)
-def mock_session():
-    session = MagicMock()
-    return session
+@pytest.fixture(scope="function")
+def test_db():
+    """Crée une base de données de test avec PostgreSQL."""
+    engine = create_engine(db_url)
+    Base.metadata.create_all(engine)
+    yield engine
+    Base.metadata.drop_all(engine)
+
+
+@pytest.fixture(autouse=True)
+def clean_db(test_db):
+    """Nettoie la base de données avant chaque test."""
+    connection = test_db.connect()
+    transaction = connection.begin()
+
+    # Supprime toutes les données des tables
+    for table in reversed(Base.metadata.sorted_tables):
+        connection.execute(table.delete())
+
+    transaction.commit()
+    connection.close()
+
+
+@pytest.fixture(scope="function")
+def db_session(test_db):
+    """Crée une nouvelle session de base de données pour chaque test."""
+    connection = test_db.connect()
+    transaction = connection.begin()
+    Session = sessionmaker(bind=connection)
+    session = Session()
+    yield session
+
+    session.expunge_all()
+    session.close()
+    transaction.rollback()
+    connection.close()
+
+
+@pytest.fixture
+def runner():
+    return CliRunner()
+
+
+@pytest.fixture
+def roles(db_session):
+    """Crée les rôles nécessaires dans la base de données."""
+    roles = [
+        Role(name=RoleType.MANAGEMENT),
+        Role(name=RoleType.SALES),
+        Role(name=RoleType.SUPPORT),
+    ]
+    for role in roles:
+        db_session.add(role)
+    db_session.commit()
+    return roles
+
+
+@pytest.fixture
+def management_user(db_session, roles):
+    """Crée un utilisateur avec le rôle management."""
+    management_role = next(r for r in roles if r.name == RoleType.MANAGEMENT)
+    user = Collaborator(
+        email="management@test.com",
+        password="password123!",
+        first_name="Management",
+        name="User",
+        phone_number="0123456789",
+        role_id=management_role.id,
+    )
+    db_session.add(user)
+    db_session.commit()
+    return user
+
+
+@pytest.fixture
+def sales_user(db_session, roles):
+    """Crée un utilisateur avec le rôle sales."""
+    sales_role = next(r for r in roles if r.name == RoleType.SALES)
+    user = Collaborator(
+        email="sales@test.com",
+        password="password123!",
+        first_name="Sales",
+        name="User",
+        phone_number="0123456788",
+        role_id=sales_role.id,
+    )
+    db_session.add(user)
+    db_session.commit()
+    return user
+
+
+@pytest.fixture
+def support_user(db_session, roles):
+    """Crée un utilisateur avec le rôle support."""
+    support_role = next(r for r in roles if r.name == RoleType.SUPPORT)
+    user = Collaborator(
+        email="support@test.com",
+        password="password123!",
+        first_name="Support",
+        name="User",
+        phone_number="0123456787",
+        role_id=support_role.id,
+    )
+    db_session.add(user)
+    db_session.commit()
+    return user
+
+
+@pytest.fixture
+def test_client(db_session, sales_user):
+    """Crée un client de test."""
+    client = Client(
+        full_name="Test Client",
+        email="client@test.com",
+        phone_number="0123456785",
+        company="Test Company",
+        sales_contact_id=sales_user.id,
+    )
+    db_session.add(client)
+    db_session.commit()
+    return client
+
+
+@pytest.fixture
+def test_contract(db_session, test_client, sales_user):
+    """Crée un contrat de test."""
+    contract = Contract(
+        client_id=test_client.id,
+        sales_contact_id=sales_user.id,
+        total_amount=1000.0,
+        remaining_amount=1000.0,
+        status=Status.SIGNED,
+    )
+    db_session.add(contract)
+    db_session.commit()
+    return contract
+
+
+@pytest.fixture
+def test_event(db_session, test_contract, support_user):
+    """Crée un événement de test."""
+    event = Event(
+        start_date=date(2024, 1, 1),
+        start_time=time(9, 0),
+        end_date=date(2024, 1, 1),
+        end_time=time(17, 0),
+        location="Test Location",
+        attendees=10,
+        contract_id=test_contract.id,
+        support_contact_id=support_user.id,
+    )
+    db_session.add(event)
+    db_session.commit()
+    return event
 
 
 @pytest.fixture
 def mock_env_file():
-    content = [
-        "EXISTING_VAR='existing_value'\n",
-        "ANOTHER_VAR='another_value'\n"
-    ]
+    content = ["EXISTING_VAR='existing_value'\n", "ANOTHER_VAR='another_value'\n"]
     return content

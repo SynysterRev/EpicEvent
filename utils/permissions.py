@@ -1,5 +1,6 @@
 import enum
 import functools
+from copy import deepcopy
 
 from utils import util
 from views import view
@@ -28,20 +29,27 @@ class ResourceType(enum.Enum):
 
 class PermissionManager:
     BASE_PERMISSIONS = {
-        ActionType.READ: [ResourceType.EVENT, ResourceType.CONTRACT,
-                          ResourceType.CLIENT, ResourceType.COLLABORATOR],
+        ActionType.READ: [
+            ResourceType.EVENT,
+            ResourceType.CONTRACT,
+            ResourceType.CLIENT,
+            ResourceType.COLLABORATOR,
+        ],
         ActionType.CREATE: [],
         ActionType.UPDATE_ALL: [],
         ActionType.UPDATE_MINE: [],
-        ActionType.DELETE: []
+        ActionType.DELETE: [],
     }
 
     PERMISSIONS = {
         RoleType.MANAGEMENT: {
             ActionType.CREATE: [ResourceType.COLLABORATOR, ResourceType.CONTRACT],
-            ActionType.UPDATE_ALL: [ResourceType.COLLABORATOR, ResourceType.CONTRACT,
-                                    ResourceType.EVENT],
-            ActionType.DELETE: [ResourceType.COLLABORATOR]
+            ActionType.UPDATE_ALL: [
+                ResourceType.COLLABORATOR,
+                ResourceType.CONTRACT,
+                ResourceType.EVENT,
+            ],
+            ActionType.DELETE: [ResourceType.COLLABORATOR],
         },
         RoleType.SALES: {
             ActionType.CREATE: [ResourceType.CLIENT, ResourceType.EVENT],
@@ -49,13 +57,12 @@ class PermissionManager:
         },
         RoleType.SUPPORT: {
             ActionType.UPDATE_MINE: [ResourceType.EVENT],
-        }
+        },
     }
 
     @staticmethod
     def has_permission(role, action, resource):
-        base_permissions = PermissionManager.BASE_PERMISSIONS
-
+        base_permissions = deepcopy(PermissionManager.BASE_PERMISSIONS)
         try:
             role_permissions = PermissionManager.PERMISSIONS[role]
         except KeyError:
@@ -74,7 +81,7 @@ class FilterPermissionManager:
             },
             ResourceType.EVENT: {
                 "assign": ["all", "no-contact"],
-            }
+            },
         },
         RoleType.SALES: {
             ResourceType.CONTRACT: {
@@ -84,18 +91,18 @@ class FilterPermissionManager:
             },
             ResourceType.CLIENT: {
                 "assigned": [True],
-            }
+            },
         },
         RoleType.SUPPORT: {
             ResourceType.EVENT: {
                 "assign": ["all", "assigned"],
             }
-        }
+        },
     }
 
     @staticmethod
     def can_use_filter(role, resource, filter_name, filter_value):
-        """Checks if a role can use a specific filter with a given value ON a specific resource."""
+        """Checks if a role can use a specific filter with a given value on a specific resource."""
         role_perms = FilterPermissionManager.FILTER_PERMISSIONS.get(role, {})
         resource_perms = role_perms.get(resource, {})
         allowed_values = resource_perms.get(filter_name)
@@ -120,10 +127,6 @@ class FilterPermissionManager:
 
 
 def check_filters(resource, *filter_names):
-    """
-    Decorator to check permissions for specified filter arguments
-    """
-
     def decorator(func):
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
@@ -137,8 +140,9 @@ def check_filters(resource, *filter_names):
             for name in filter_names:
                 if name in kwargs:
                     value = kwargs[name]
-                    if not FilterPermissionManager.can_use_filter(role, resource, name,
-                                                                  value):
+                    if not FilterPermissionManager.can_use_filter(
+                        role, resource, name, value
+                    ):
                         view.display_error(
                             f"Role '{role.value}' does not have permission to use filter "
                             f"'--{name}' with value '{value}' for resource '{resource.name}'."
@@ -177,13 +181,15 @@ def permission(*actions, resource):
             try:
                 token = util.get_token()
                 for action in actions:
-                    if PermissionManager.has_permission(RoleType(token["role"]), action,
-                                                        resource):
+                    if PermissionManager.has_permission(
+                        RoleType(token["role"]), action, resource
+                    ):
                         return func(*args, **kwargs)
                 actions_str = " or ".join(action.name for action in actions)
                 view.display_error(
                     f"You do not have permission to perform {actions_str} on"
-                    f" {resource.name}.")
+                    f" {resource.name}."
+                )
             except Exception as e:
                 view.display_error(str(e))
 

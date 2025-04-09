@@ -16,13 +16,18 @@ sentry_sdk.init(
     send_default_pii=True,
 )
 
+
 @click.group()
 def cli():
     pass
 
 
-from controllers import (collaborator_controller, client_controller,
-                         contract_controller, event_controller)
+from controllers import (
+    collaborator_controller,
+    client_controller,
+    contract_controller,
+    event_controller,
+)
 
 
 @click.command()
@@ -50,12 +55,12 @@ def init():
         db_name = input("Database name : ")
 
     secret_key = SECRET_KEY
-    if not SECRET_KEY :
+    if not SECRET_KEY:
         secret_key = secrets.token_hex(32)
 
     try:
         views.view.display_message("Creating .env file...")
-        with open('.env', 'w') as env:
+        with open(".env", "w") as env:
             env.write(f"DB_USER='{db_user}'\n")
             env.write(f"DB_PASSWORD='{db_password}'\n")
             env.write(f"DB_PORT='{db_port}'\n")
@@ -68,10 +73,11 @@ def init():
         return
     views.view.display_message("Initializing database...")
     from init_db import init_db
+
     init_db()
 
 
 cli.add_command(init)
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     cli()

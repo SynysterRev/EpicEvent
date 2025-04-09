@@ -9,8 +9,14 @@ from db_config import engine
 from models.client import Client
 from models.collaborator import Collaborator
 from utils import util
-from utils.permissions import login_required, ActionType, ResourceType, permission, \
-    RoleType, check_filters
+from utils.permissions import (
+    login_required,
+    ActionType,
+    ResourceType,
+    permission,
+    RoleType,
+    check_filters,
+)
 from views import view
 
 
@@ -24,7 +30,13 @@ from views import view
 @check_filters(ResourceType.CLIENT, "assigned")
 @login_required(pass_token=True)
 def get_clients(token, assigned):
-    """Get all clients"""
+    """Get all clients
+
+    Args:
+        token (str): The token of the current user.
+        assigned (bool): If True, only return clients assigned to the current user.
+                           This is enabled by using the --assigned flag.
+    """
     with Session(engine) as session:
         stmt = select(Client)
         try:
@@ -47,12 +59,15 @@ def get_clients(token, assigned):
 def create_client(token):
     """Create a new client"""
     with Session(engine) as session:
-        client_name = util.ask_for_input("Enter your client full name",
-                                         validator.validate_name)
-        client_email = util.ask_for_input("Enter your client email",
-                                          validator.validate_email)
-        client_phone = util.ask_for_input("Enter your client phone number",
-                                          validator.validate_phone_number)
+        client_name = util.ask_for_input(
+            "Enter your client full name", validator.validate_name
+        )
+        client_email = util.ask_for_input(
+            "Enter your client email", validator.validate_email
+        )
+        client_phone = util.ask_for_input(
+            "Enter your client phone number", validator.validate_phone_number
+        )
         client_company = util.ask_for_input("Enter your client company")
         try:
             token_id = token["id"]
@@ -60,8 +75,13 @@ def create_client(token):
             view.display_error(f"No id stocked in the current token. Try to log again.")
             return
         sales_id = token_id
-        client = Client(client_name, client_email, client_phone, client_company,
-                        sales_contact_id=sales_id)
+        client = Client(
+            client_name,
+            client_email,
+            client_phone,
+            client_company,
+            sales_contact_id=sales_id,
+        )
         try:
             session.add(client)
             session.commit()
@@ -69,10 +89,9 @@ def create_client(token):
         except IntegrityError as e:
             view.display_error(str(e))
 
+
 def ask_client_id(session):
-    email_phone = util.ask_for_input(
-        "Enter the client email or phone number "
-    )
+    email_phone = util.ask_for_input("Enter the client email or phone number ")
     client = session.execute(
         select(Client).where(
             or_(
@@ -103,7 +122,6 @@ def update_client(token):
         if client.id != token_id:
             view.display_error(f"This client is not assigned to you")
             return
-
         view.display_message(f"Updating\n{client}", "blue")
         while True:
             choice = int(view.display_edit_client())
@@ -111,19 +129,23 @@ def update_client(token):
                 if choice == 0:
                     break
                 elif choice == 1:
-                    client.first_name = util.ask_for_input("Full name ",
-                                                                 validator.validate_name)
+                    client.full_name = util.ask_for_input(
+                        "Full name ", validator.validate_name
+                    )
                 elif choice == 2:
-                    client.email = util.ask_for_input("Email ",
-                                                            validator.validate_email)
+                    client.email = util.ask_for_input(
+                        "Email ", validator.validate_email
+                    )
                 elif choice == 3:
-                    client.phone_number = util.ask_for_input("Phone number ",
-                                                                   validator.validate_phone_number)
+                    client.phone_number = util.ask_for_input(
+                        "Phone number ", validator.validate_phone_number
+                    )
                 elif choice == 4:
                     client.company = util.ask_for_input("Company name ")
                 elif choice == 5:
-                    sales_id = util.ask_for_input("Sales contact id ",
-                                                                 validator.validate_digit)
+                    sales_id = util.ask_for_input(
+                        "Sales contact id ", validator.validate_digit
+                    )
                     collaborator = session.get(Collaborator, sales_id)
                     if collaborator and collaborator.role.name == RoleType.SALES:
                         client.sales_contact_id = sales_id
@@ -131,5 +153,6 @@ def update_client(token):
                         view.display_error("Sales contact id does not exist.")
             else:
                 view.display_error("Invalid choice.")
+
         session.commit()
         view.display_message(f"{client} has been updated.", "green")
