@@ -19,7 +19,7 @@ You will need to have PostgreSQL installed on your machine.
 3. Install Poetry if you don't have it already: ```pip install poetry```
 4. Create a virtual environment and install dependencies with: ```poetry install```
 5. Activate the virtual environment with ```.venv\Scripts\activate.bat``` on Windows or ```eval $(poetry env activate)``` on macOS or Linux. (If needed, refer to: https://python-poetry.org/docs/managing-environments/#activating-the-environment)
-6. Fill in the provided empty `.env` file.
+6. Fill in the provided empty `.env` file. (see [Sentry](#Sentry) for more information about SENTRY_DSN)
 7. Run the command ```epicevent init``` and follow the instructions to set up the application.
 
 # Available Commands
@@ -180,6 +180,9 @@ epicevent update-event
 ![Database schema](assets/bdd_schema.png)
 
 # Sentry
+To use Sentry we have to create an [sentry account](https://sentry.io/).
+Then create a new project and select plateform: Python. Follow the setup guide and look for the line dsn="https://your-key@sentry.io/your-project-id".
+
 An example of sentry handling errors:
 
 ![Sentry](assets/sentry.png)
