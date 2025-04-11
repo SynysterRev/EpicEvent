@@ -9,7 +9,7 @@ from sqlalchemy.orm import sessionmaker
 
 from models import Base
 from models.client import Client
-from models.collaborator import Collaborator, Role
+from models.collaborator import Collaborator
 from models.contract import Contract, Status
 from models.event import Event
 from utils.permissions import RoleType
@@ -68,32 +68,16 @@ def db_session(test_db):
 def runner():
     return CliRunner()
 
-
 @pytest.fixture
-def roles(db_session):
-    """Crée les rôles nécessaires dans la base de données."""
-    roles = [
-        Role(name=RoleType.MANAGEMENT),
-        Role(name=RoleType.SALES),
-        Role(name=RoleType.SUPPORT),
-    ]
-    for role in roles:
-        db_session.add(role)
-    db_session.commit()
-    return roles
-
-
-@pytest.fixture
-def management_user(db_session, roles):
+def management_user(db_session):
     """Crée un utilisateur avec le rôle management."""
-    management_role = next(r for r in roles if r.name == RoleType.MANAGEMENT)
     user = Collaborator(
         email="management@test.com",
         password="password123!",
         first_name="Management",
         name="User",
         phone_number="0123456789",
-        role_id=management_role.id,
+        role=RoleType.MANAGEMENT,
     )
     db_session.add(user)
     db_session.commit()
@@ -101,16 +85,15 @@ def management_user(db_session, roles):
 
 
 @pytest.fixture
-def sales_user(db_session, roles):
+def sales_user(db_session):
     """Crée un utilisateur avec le rôle sales."""
-    sales_role = next(r for r in roles if r.name == RoleType.SALES)
     user = Collaborator(
         email="sales@test.com",
         password="password123!",
         first_name="Sales",
         name="User",
         phone_number="0123456788",
-        role_id=sales_role.id,
+        role=RoleType.SALES,
     )
     db_session.add(user)
     db_session.commit()
@@ -118,16 +101,15 @@ def sales_user(db_session, roles):
 
 
 @pytest.fixture
-def support_user(db_session, roles):
+def support_user(db_session):
     """Crée un utilisateur avec le rôle support."""
-    support_role = next(r for r in roles if r.name == RoleType.SUPPORT)
     user = Collaborator(
         email="support@test.com",
         password="password123!",
         first_name="Support",
         name="User",
         phone_number="0123456787",
-        role_id=support_role.id,
+        role=RoleType.SUPPORT,
     )
     db_session.add(user)
     db_session.commit()

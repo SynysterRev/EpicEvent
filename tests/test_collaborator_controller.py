@@ -11,10 +11,8 @@ from models.collaborator import Collaborator
 from utils.permissions import RoleType
 
 
-def test_create_collaborator_success(runner, db_session, roles, management_user):
+def test_create_collaborator_success(runner, db_session, management_user):
     """Test creating a collaborator."""
-    management_role = next(r for r in roles if r.name == RoleType.MANAGEMENT)
-    management_role_id = management_role.id
     with patch(
         "controllers.collaborator_controller.Session", return_value=db_session
     ), patch(
@@ -34,9 +32,6 @@ def test_create_collaborator_success(runner, db_session, roles, management_user)
     ), patch(
         "controllers.collaborator_controller.util.choose_from_enum",
         return_value=RoleType.MANAGEMENT,
-    ), patch(
-        "controllers.collaborator_controller.get_id_from_enum_role",
-        return_value=management_role.id,
     ):
         result = runner.invoke(create_collaborator)
         assert result.exit_code == 0
@@ -50,7 +45,7 @@ def test_create_collaborator_success(runner, db_session, roles, management_user)
         assert collaborator.first_name == "Collaborator"
         assert collaborator.name == "New"
         assert collaborator.phone_number == "0123456781"
-        assert collaborator.role_id == management_role_id
+        assert collaborator.role == RoleType.MANAGEMENT
 
 
 def test_create_collaborator_duplicate_email(runner, db_session, management_user):

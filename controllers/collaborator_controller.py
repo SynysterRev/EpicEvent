@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 import validator
 from cli import cli
 from db_config import engine
-from models.collaborator import Collaborator, Role
+from models.collaborator import Collaborator
 from utils import util
 from utils.permissions import (
     RoleType,
@@ -16,14 +16,6 @@ from utils.permissions import (
     permission,
 )
 from views import view
-
-
-def get_id_from_enum_role(role, session):
-    role_id = session.execute(select(Role.id).where(Role.name == role)).scalar()
-    if not role_id:
-        view.display_error(f"Role {role.value} not found in collaborator_role.")
-        return None
-    return role_id
 
 
 @cli.command()
@@ -60,14 +52,13 @@ def create_collaborator():
         )
 
         role = util.choose_from_enum(RoleType)
-        role_id = get_id_from_enum_role(role, session)
         collaborator = Collaborator(
             collaborator_email,
             collaborator_password,
             collaborator_first_name,
             collaborator_name,
             collaborator_phone_number,
-            role_id,
+            role,
         )
         session.add(collaborator)
         session.commit()
@@ -127,8 +118,7 @@ def update_collaborator():
                     )
                 elif choice == 6:
                     role = util.choose_from_enum(RoleType)
-                    role_id = get_id_from_enum_role(role, session)
-                    collaborator.role_id = role_id
+                    collaborator.role = role
             else:
                 view.display_error("Invalid choice.")
         session.commit()

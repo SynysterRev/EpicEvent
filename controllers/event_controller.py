@@ -110,7 +110,7 @@ def create_event(token):
                     f"Collaborator with id {support_id} does not " f"exist."
                 )
                 return
-            if collaborator.role.name != RoleType.SUPPORT:
+            if collaborator.role != RoleType.SUPPORT:
                 view.display_error(f"This collaborator cannot be assigned to a event.")
                 return
         event = Event(
@@ -191,7 +191,7 @@ def update_event(token):
                         "Support ID ", validator.validate_digit
                     )
                     collaborator = session.get(Collaborator, collaborator_id)
-                    if collaborator and collaborator.role.name == RoleType.SUPPORT:
+                    if collaborator and collaborator.role == RoleType.SUPPORT:
                         event.support_contact_id = collaborator_id
                     else:
                         view.display_error("Support contact id does not exist.")

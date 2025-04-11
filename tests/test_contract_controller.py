@@ -155,7 +155,7 @@ def test_update_contract_not_authorized(runner, db_session, test_contract):
         first_name="Other",
         name="Sales",
         phone_number="0123456785",
-        role_id=test_contract.collaborator.role_id,
+        role=test_contract.collaborator.role,
     )
     db_session.add(other_sales)
     db_session.commit()

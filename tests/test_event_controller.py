@@ -149,18 +149,16 @@ def test_update_event_not_found(runner, db_session, management_user):
 
 
 def test_update_event_not_authorized(
-    runner, db_session, roles, support_user, test_event
+    runner, db_session, support_user, test_event
 ):
     """Test updating an event by an unauthorized user."""
-
-    support_role = next(r for r in roles if r.name == RoleType.SUPPORT)
     other_support = Collaborator(
         email="other@test.com",
         password="password123!",
         first_name="Other",
         name="Support",
         phone_number="0123456785",
-        role_id=support_role.id,
+        role=RoleType.SUPPORT,
     )
     db_session.add(other_support)
     db_session.commit()

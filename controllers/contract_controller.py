@@ -97,7 +97,7 @@ def create_contract():
                 f"exist. Check the client sales contact ID."
             )
             return
-        if collaborator.role.name != RoleType.SALES:
+        if collaborator.role != RoleType.SALES:
             view.display_error(f"This collaborator cannot be assigned to a contract.")
             return
 
