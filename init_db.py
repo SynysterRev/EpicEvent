@@ -2,11 +2,14 @@ import secrets
 
 import psycopg2
 import sentry_sdk
+from sqlalchemy.orm import Session
 
 import views.view
 from db_config import DB_NAME, engine, DB_USER, DB_PASSWORD, DB_PORT
 from models import Base
 from cli import cli
+from models.collaborator import Collaborator
+from utils.permissions import RoleType
 from utils.util import write_env_variable
 
 
@@ -57,10 +60,23 @@ def init_db():
 
         try:
             Base.metadata.create_all(engine)
+
             views.view.display_message(
                 f"The tables have been successfully created in the database "
                 f"'{DB_NAME}'.", "green"
             )
+            with Session(engine) as session:
+                collaborator = Collaborator(
+                    "admin@admin.com",
+                    "Admin123!",
+                    "admin",
+                    "admin",
+                    "012345678",
+                    RoleType.MANAGEMENT,
+                )
+                session.add(collaborator)
+                session.commit()
+
         except Exception as e:
             sentry_sdk.capture_exception(e)
             views.view.display_error(e)

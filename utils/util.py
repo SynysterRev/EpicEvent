@@ -77,7 +77,7 @@ def create_token(collaborator):
         "id": collaborator.id,
         "first_name": collaborator.first_name,
         "name": collaborator.name,
-        "role": collaborator.role.name.value,
+        "role": collaborator.role.value,
         "exp": datetime.now(UTC) + timedelta(minutes=DEFAULT_TOKEN_EXPIRY_MINUTES),
     }
     token = jwt.encode(payload=payload, key=secret_key)

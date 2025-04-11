@@ -43,18 +43,18 @@ class Contract(Base):
         self, total_amount, remaining_amount, status, client_id, sales_contact_id=None
     ):
         super().__init__()
-        self.total_amount = total_amount
-        self.remaining_amount = remaining_amount
+        self.total_amount = total_amount.replace(',', '.')
+        self.remaining_amount = remaining_amount.replace(',', '.')
         self.status = status
         self.client_id = client_id
         self.sales_contact_id = sales_contact_id
 
     def __repr__(self):
         return (
-            f"Contract {self.id} for client {self.client.full_name} is "
+            f"Contract {self.id} for client: {self.client.full_name} is "
             f"{self.status.value}.\n "
-            f"Total amount {self.total_amount}€, remaining amount"
+            f"Total amount: {self.total_amount}€, remaining amount:"
             f" {self.remaining_amount}€."
-            f" Sales contact {self.collaborator.first_name}"
+            f" Sales contact: {self.collaborator.first_name}"
             f" {self.collaborator.name}."
         )

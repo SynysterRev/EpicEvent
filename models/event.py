@@ -67,7 +67,8 @@ class Event(Base):
             f"{self.start_date} at {self.start_time} and end {self.end_date} at "
             f"{self.end_time}.\nIt takes place on {self.location} and "
             f"{self.attendees} persons are expected.\n"
-            f"{support_contact_info}"
+            f"Support contact: {support_contact_info}\n"
+            f"Note: {self.note}"
         )
         return event_info
 

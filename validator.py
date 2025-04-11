@@ -37,9 +37,12 @@ def validate_digit(number):
 
 
 def validate_decimal(number):
-    if not number.isdecimal():
+    try:
+        float(number.replace(',', '.'))
+        return True
+    except ValueError:
         raise ValueError("You must enter a decimal number.")
-    return True
+
 
 
 def validate_date(date):

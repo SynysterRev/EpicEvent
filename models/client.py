@@ -47,6 +47,7 @@ class Client(Base):
 
     def __str__(self):
         return (
-            f"Client {self.full_name} : mail {self.email}, phone {self.phone_number}, "
-            f"company {self.company}, sales contact {self.sales_contact_id}"
+            f"Client: {self.full_name}, mail: {self.email}, phone:"
+            f" {self.phone_number}, "
+            f"company: {self.company}, sales contact: {self.sales_contact_id}"
         )

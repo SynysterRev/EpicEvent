@@ -284,8 +284,7 @@ def test_create_token(mocker):
     collaborator.name = "bob"
 
     collaborator.role = MagicMock()
-    collaborator.role.name = MagicMock()
-    collaborator.role.name.value = RoleType.MANAGEMENT.value
+    collaborator.role.name = RoleType.MANAGEMENT.value
 
     mock_write = mocker.patch("utils.util.write_env_variable")
 

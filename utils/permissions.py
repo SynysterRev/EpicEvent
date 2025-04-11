@@ -2,6 +2,8 @@ import enum
 import functools
 from copy import deepcopy
 
+import sentry_sdk
+
 from utils import util
 from views import view
 
@@ -186,12 +188,13 @@ def permission(*actions, resource):
                     ):
                         return func(*args, **kwargs)
                 actions_str = " or ".join(action.name for action in actions)
-                view.display_error(
-                    f"You do not have permission to perform {actions_str} on"
-                    f" {resource.name}."
-                )
+                sentry_sdk.capture_exception(
+                    PermissionError(f"You do not have permission to perform "
+                                    f"{actions_str} on {resource.name}."))
                 raise PermissionError(f"You do not have permission to perform "
                                       f"{actions_str} on {resource.name}.")
+
+
             except Exception as e:
                 view.display_error(str(e))
 
