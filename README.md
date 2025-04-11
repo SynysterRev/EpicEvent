@@ -6,32 +6,33 @@ Poetry version 2.0.1
 
 PostgreSQL 17
 
-# C'est quoi
-Epic Event est une application en ligne de commande (CLI) développée en Python pour gérer les clients, les contrats et les événements d'une entreprise organisatrice d'événements.
+
+# What is it
+Epic Event is a command-line interface (CLI) application developed in Python to manage clients, contracts, and events for an event organization company.
 
 # Installation
-Vous aurez besoin d'avoir PostgreSQL installé sur votre machine.
-1. Clonez le dépôt ou télécharger une archive.
-2. Rendez-vous depuis un terminal dans la racine du répertoire
-   - Sur windows : clic-droit puis ouvrir dans le terminal.
-   - Sur Mac : ouvrir un terminal puis glisser-déposer le dossier directement dans le terminal.
-3. Installer poetry si vous le n'avez pas ```pip install poetry```
-4. Créer l'environnement virtuel et installer les dépendances avec ```poetry install```
-5. Activez l'environnement virtuel avec ```.venv\Scripts\activate.bat``` sous windows ou ```eval $(poetry env activate)``` sous macos ou linux. (au besoin https://python-poetry.org/docs/managing-environments/#activating-the-environment)
-6. Remplissez le fichier .env vierge fourni
-7. Tapez la commande ```epicevent init``` et suivez les instructions afin de paramètrer l'application.
+You will need to have PostgreSQL installed on your machine.
+1. Clone the repository or download an archive.
+2. Open a terminal in the root of the directory
+   - On Windows: right-click and select "Open in Terminal."
+   - On Mac: open a terminal and drag and drop the folder directly into the terminal.
+3. Install Poetry if you don't have it already: ```pip install poetry```
+4. Create a virtual environment and install dependencies with: ```poetry install```
+5. Activate the virtual environment with ```.venv\Scripts\activate.bat``` on Windows or ```eval $(poetry env activate)``` on macOS or Linux. (If needed, refer to: https://python-poetry.org/docs/managing-environments/#activating-the-environment)
+6. Fill in the provided empty `.env` file.
+7. Run the command ```epicevent init``` and follow the instructions to set up the application.
 
-# Commandes disponibles
-Tout se faisant en ligne de commande il faudra toujours commencer par taper ```epicevent nomdelacommande```.
+# Available Commands
+Since everything is done via the command line, you will always need to start by typing ```epicevent <command_name>```.
 
-## Commandes CLI de `epicevent`
+## CLI Commands for `epicevent`
 
-Cette section documente les commandes disponibles via la ligne de commande `epicevent`. Chaque commande est accompagnée d'une description et d'un exemple d'utilisation.
+This section documents the available commands through the `epicevent` command line. Each command includes a description and an example usage.
 
 ---
 
 ### `init`
-Gère la clé secrète JWT, crée la base de données et les tables.
+Manages the JWT secret key, creates the database, and tables.
 
 ```bash
 epicevent init
@@ -40,7 +41,7 @@ epicevent init
 ---
 
 ### `login`
-Connecte l'utilisateur à l'application.
+Logs the user into the application.
 
 ```bash
 epicevent login
@@ -49,7 +50,7 @@ epicevent login
 ---
 
 ### `logout`
-Déconnecte l'utilisateur.
+Logs the user out.
 
 ```bash
 epicevent logout
@@ -58,7 +59,7 @@ epicevent logout
 ---
 
 ### `create-collaborator`
-Crée un nouveau collaborateur.
+Creates a new collaborator.
 
 ```bash
 epicevent create-collaborator
@@ -67,7 +68,7 @@ epicevent create-collaborator
 ---
 
 ### `delete-collaborator`
-Supprime un collaborateur existant.
+Deletes an existing collaborator.
 
 ```bash
 epicevent delete-collaborator
@@ -76,7 +77,7 @@ epicevent delete-collaborator
 ---
 
 ### `create-client`
-Crée un nouveau client.
+Creates a new client.
 
 ```bash
 epicevent create-client
@@ -85,45 +86,45 @@ epicevent create-client
 ---
 
 ### `get-clients`
-Affiche tous les clients.
+Displays all clients.
 
 ```bash
 epicevent get-clients [OPTIONS]
 ```
 
-**Options :**
-- `--assigned` : Affiche uniquement les clients assignés à l'utilisateur connecté.
+**Options:**
+- `--assigned` : Displays only clients assigned to the logged-in user.
 
 ---
 
 ### `get-events`
-Affiche tous les événements.
+Displays all events.
 
 ```bash
 epicevent get-events [OPTIONS]
 ```
 
-**Options :**
-- `--assign [all|assigned|no-contact]` : Filtre les événements selon leur assignation.
+**Options:**
+- `--assign [all|assigned|no-contact]` : Filters events based on their assignment.
 
 ---
 
 ### `get-contracts`
-Affiche tous les contrats.
+Displays all contracts.
 
 ```bash
 epicevent get-contracts [OPTIONS]
 ```
 
-**Options :**
-- `--status [signed|pending|cancelled]` : Filtre les contrats par statut.
-- `--remaining-amount` : Affiche uniquement les contrats avec un montant restant.
-- `--assigned` : Affiche uniquement les contrats assignés à l'utilisateur.
+**Options:**
+- `--status [signed|pending|cancelled]` : Filters contracts by status.
+- `--remaining-amount` : Displays only contracts with a remaining amount.
+- `--assigned` : Displays only contracts assigned to the user.
 
 ---
 
 ### `create-contract`
-Crée un nouveau contrat.
+Creates a new contract.
 
 ```bash
 epicevent create-contract
@@ -132,7 +133,7 @@ epicevent create-contract
 ---
 
 ### `create-event`
-Crée un nouvel événement.
+Creates a new event.
 
 ```bash
 epicevent create-event
@@ -141,7 +142,7 @@ epicevent create-event
 ---
 
 ### `update-client`
-Met à jour les informations d'un client existant.
+Updates an existing client's information.
 
 ```bash
 epicevent update-client
@@ -150,7 +151,7 @@ epicevent update-client
 ---
 
 ### `update-collaborator`
-Met à jour les informations d'un collaborateur existant.
+Updates an existing collaborator's information.
 
 ```bash
 epicevent update-collaborator
@@ -159,7 +160,7 @@ epicevent update-collaborator
 ---
 
 ### `update-contract`
-Met à jour les informations d'un contrat existant.
+Updates an existing contract's information.
 
 ```bash
 epicevent update-contract
@@ -168,14 +169,14 @@ epicevent update-contract
 ---
 
 ### `update-event`
-Met à jour les informations d'un événement existant.
+Updates an existing event's information.
 
 ```bash
 epicevent update-event
 ```
 
+# Database Schema
 
-# Schéma base de données
 ![Database schema](assets/bdd_schema.png)
 
 # Sentry
