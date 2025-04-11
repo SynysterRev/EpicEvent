@@ -1,8 +1,7 @@
 import datetime
 
-from sqlalchemy import ForeignKey, String, Date, Time
+from sqlalchemy import ForeignKey, String, Date, Time, Text
 from sqlalchemy.orm import relationship, backref, mapped_column, Mapped
-from sqlalchemy.sql.operators import truediv
 
 from models import Base
 
@@ -31,17 +30,19 @@ class Event(Base):
     collaborator: Mapped["Collaborator"] = relationship(
         "Collaborator", back_populates="events"
     )
+    note: Mapped[str] = mapped_column(Text, nullable=True)
 
     def __init__(
-        self,
-        start_date,
-        start_time,
-        end_date,
-        end_time,
-        location,
-        attendees,
-        contract_id,
-        support_contact_id,
+            self,
+            start_date,
+            start_time,
+            end_date,
+            end_time,
+            location,
+            attendees,
+            contract_id,
+            support_contact_id,
+            note="",
     ):
         super().__init__()
         self.start_date = start_date
@@ -52,6 +53,7 @@ class Event(Base):
         self.attendees = attendees
         self.contract_id = contract_id
         self.support_contact_id = support_contact_id
+        self.note = note
 
     def __str__(self):
         support_contact_info = (

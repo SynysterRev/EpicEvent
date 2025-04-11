@@ -72,18 +72,6 @@ def create_collaborator():
         session.add(collaborator)
         session.commit()
 
-        with sentry_sdk.new_scope() as scope:
-            scope.set_tag("action", "create_collaborator")
-
-            scope.set_extra("user_id", collaborator.id)
-            scope.set_extra("email", collaborator.email)
-            scope.set_extra("role", collaborator.role.name.value)
-            scope.fingerprint = [str(collaborator.id), "create_collaborator"]
-
-            sentry_sdk.capture_message(
-                f"New collaborator created {collaborator_email}", level="info"
-            )
-
 
 def ask_collaborator_id(session):
     email_phone = util.ask_for_input("Enter the collaborator email or phone number ")

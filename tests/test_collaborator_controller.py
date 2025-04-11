@@ -14,7 +14,7 @@ from utils.permissions import RoleType
 def test_create_collaborator_success(runner, db_session, roles, management_user):
     """Test creating a collaborator."""
     management_role = next(r for r in roles if r.name == RoleType.MANAGEMENT)
-
+    management_role_id = management_role.id
     with patch(
         "controllers.collaborator_controller.Session", return_value=db_session
     ), patch(
@@ -50,7 +50,7 @@ def test_create_collaborator_success(runner, db_session, roles, management_user)
         assert collaborator.first_name == "Collaborator"
         assert collaborator.name == "New"
         assert collaborator.phone_number == "0123456781"
-        assert collaborator.role_id == management_role.id
+        assert collaborator.role_id == management_role_id
 
 
 def test_create_collaborator_duplicate_email(runner, db_session, management_user):

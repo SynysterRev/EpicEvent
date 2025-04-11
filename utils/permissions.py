@@ -190,6 +190,8 @@ def permission(*actions, resource):
                     f"You do not have permission to perform {actions_str} on"
                     f" {resource.name}."
                 )
+                raise PermissionError(f"You do not have permission to perform "
+                                      f"{actions_str} on {resource.name}.")
             except Exception as e:
                 view.display_error(str(e))
 
