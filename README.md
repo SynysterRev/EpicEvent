@@ -177,3 +177,8 @@ epicevent update-event
 
 # Schéma base de données
 ![Database schema](assets/bdd_schema.png)
+
+# Sentry
+An example of sentry handling errors:
+
+![Sentry](assets/sentry.png)
