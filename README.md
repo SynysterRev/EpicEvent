@@ -18,7 +18,8 @@ Vous aurez besoin d'avoir PostgreSQL installé sur votre machine.
 3. Installer poetry si vous le n'avez pas ```pip install poetry```
 4. Créer l'environnement virtuel et installer les dépendances avec ```poetry install```
 5. Activez l'environnement virtuel avec ```.venv\Scripts\activate.bat``` sous windows ou ```eval $(poetry env activate)``` sous macos ou linux. (au besoin https://python-poetry.org/docs/managing-environments/#activating-the-environment)
-6. Tapez la commande ```epicevent init``` et suivez les instructions afin de paramètrer l'application.
+6. Remplissez le fichier .env vierge fourni
+7. Tapez la commande ```epicevent init``` et suivez les instructions afin de paramètrer l'application.
 
 # Commandes disponibles
 Tout se faisant en ligne de commande il faudra toujours commencer par taper ```epicevent nomdelacommande```.
