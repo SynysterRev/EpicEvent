@@ -31,7 +31,7 @@ Cette section documente les commandes disponibles via la ligne de commande `epic
 ---
 
 ### `init`
-Crée les fichiers `.env` nécessaires, gère la clé secrète JWT, crée la base de données et les tables.
+Gère la clé secrète JWT, crée la base de données et les tables.
 
 ```bash
 epicevent init
