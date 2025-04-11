@@ -175,3 +175,4 @@ epicevent update-event
 
 
 # Schéma base de données
+![Database schema](assets/bdd_schema.png)
