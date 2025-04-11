@@ -7,7 +7,7 @@ import views.view
 from db_config import DB_NAME, engine, DB_USER, DB_PASSWORD, DB_PORT
 from models import Base
 from cli import cli
-
+from utils.util import write_env_variable
 
 
 @cli.command()
@@ -22,9 +22,8 @@ def init():
 
     try:
         views.view.display_message("Writing in .env file...")
-        with open(".env", "a") as env:
-            env.write(f"SECRET_KEY='{secret_key}'\n")
-            views.view.display_message("Secret key generated.", "green")
+        write_env_variable("SECRET_KEY", secret_key)
+        views.view.display_message("Secret key generated.", "green")
     except PermissionError as e:
         views.view.display_error(f"Permission denied: Unable to write in '.env' file.")
         sentry_sdk.capture_exception(e)
