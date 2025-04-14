@@ -2,12 +2,13 @@ import secrets
 
 import psycopg2
 import sentry_sdk
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 import views.view
+from cli import cli
 from db_config import DB_NAME, engine, DB_USER, DB_PASSWORD, DB_PORT
 from models import Base
-from cli import cli
 from models.collaborator import Collaborator
 from utils.permissions import RoleType
 from utils.util import write_env_variable
@@ -34,6 +35,7 @@ def init():
     views.view.display_message("Initializing database...")
     init_db()
 
+
 def init_db():
     try:
         conn = psycopg2.connect(
@@ -51,7 +53,8 @@ def init_db():
         exists = cursor.fetchone()
         if not exists:
             cursor.execute(f"CREATE DATABASE {DB_NAME};")
-            views.view.display_message(f"Database '{DB_NAME}' successfully created.", "green")
+            views.view.display_message(f"Database '{DB_NAME}' successfully created.",
+                                       "green")
         else:
             views.view.display_message(f"Database '{DB_NAME}' already exists.")
 
@@ -65,17 +68,24 @@ def init_db():
                 f"The tables have been successfully created in the database "
                 f"'{DB_NAME}'.", "green"
             )
+
             with Session(engine) as session:
-                collaborator = Collaborator(
-                    "admin@admin.com",
-                    "Admin123!",
-                    "admin",
-                    "admin",
-                    "012345678",
-                    RoleType.MANAGEMENT,
-                )
-                session.add(collaborator)
-                session.commit()
+                collaborator = session.execute(
+                    select(Collaborator).where(
+                        Collaborator.email == "admin@admin.com",
+                    )
+                ).scalar_one_or_none()
+                if not collaborator:
+                    collaborator = Collaborator(
+                        "admin@admin.com",
+                        "Admin123!",
+                        "admin",
+                        "admin",
+                        "012345678",
+                        RoleType.MANAGEMENT,
+                    )
+                    session.add(collaborator)
+                    session.commit()
 
         except Exception as e:
             sentry_sdk.capture_exception(e)

@@ -1,9 +1,7 @@
 import click
-import sentry_sdk
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-import utils.permissions
 import validator
 from cli import cli
 from db_config import engine
@@ -49,16 +47,16 @@ def get_events(token, assign):
             collaborator_id = token["id"]
         except KeyError:
             view.display_error(
-                f"No id stocked in the current token. Try to login again."
+                "No id stocked in the current token. Try to login again."
             )
             return
         if assign == "assigned":
             stmt = stmt.where(Event.support_contact_id == collaborator_id)
         elif assign == "no-contact":
-            stmt = stmt.where(Event.support_contact_id == None)
+            stmt = stmt.where(Event.support_contact_id is None)
         all_events = session.execute(stmt).scalars().all()
         if not all_events:
-            view.display_message(f"No events found.")
+            view.display_message("No events found.")
         for event in all_events:
             view.display_message(event)
 
@@ -77,7 +75,7 @@ def create_event(token):
         try:
             token_id = token["id"]
         except KeyError:
-            view.display_error(f"No id stocked in the current token. Try to log again.")
+            view.display_error("No id stocked in the current token. Try to log again.")
             return
 
         if token_id != contract.sales_contact_id:
@@ -111,7 +109,7 @@ def create_event(token):
                 )
                 return
             if collaborator.role != RoleType.SUPPORT:
-                view.display_error(f"This collaborator cannot be assigned to a event.")
+                view.display_error("This collaborator cannot be assigned to a event.")
                 return
         event = Event(
             start_date,
@@ -144,7 +142,8 @@ def update_event(token):
         if not is_manager:
             if event.support_contact_id != token["id"]:
                 view.display_error(
-                    "You are not authorized to update an event to which you are not assigned."
+                    "You are not authorized to update an event "
+                    "to which you are not assigned."
                 )
                 return
         max_choice = 8 if is_manager else 6

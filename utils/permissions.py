@@ -104,7 +104,8 @@ class FilterPermissionManager:
 
     @staticmethod
     def can_use_filter(role, resource, filter_name, filter_value):
-        """Checks if a role can use a specific filter with a given value on a specific resource."""
+        """Checks if a role can use a specific filter
+        with a given value on a specific resource."""
         role_perms = FilterPermissionManager.FILTER_PERMISSIONS.get(role, {})
         resource_perms = role_perms.get(resource, {})
         allowed_values = resource_perms.get(filter_name)
@@ -189,11 +190,15 @@ def permission(*actions, resource):
                         return func(*args, **kwargs)
                 actions_str = " or ".join(action.name for action in actions)
                 sentry_sdk.capture_exception(
-                    PermissionError(f"You do not have permission to perform "
-                                    f"{actions_str} on {resource.name}."))
-                raise PermissionError(f"You do not have permission to perform "
-                                      f"{actions_str} on {resource.name}.")
-
+                    PermissionError(
+                        f"You do not have permission to perform "
+                        f"{actions_str} on {resource.name}."
+                    )
+                )
+                raise PermissionError(
+                    f"You do not have permission to perform "
+                    f"{actions_str} on {resource.name}."
+                )
 
             except Exception as e:
                 view.display_error(str(e))

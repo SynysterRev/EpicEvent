@@ -5,6 +5,7 @@ from models import Base
 from utils import util
 from utils.permissions import PermissionManager, RoleType
 
+
 class Collaborator(Base):
     __tablename__ = "collaborator"
 

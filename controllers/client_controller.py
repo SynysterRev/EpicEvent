@@ -42,13 +42,13 @@ def get_clients(token, assigned):
         try:
             collaborator_id = token["id"]
         except KeyError:
-            view.display_error(f"No id stocked in the current token. Try to log again.")
+            view.display_error("No id stocked in the current token. Try to log again.")
             return
         if assigned:
             stmt = stmt.where(Client.sales_contact_id == collaborator_id)
         all_clients = session.execute(stmt).scalars().all()
         if not all_clients:
-            view.display_message(f"No clients found.")
+            view.display_message("No clients found.")
         for client in all_clients:
             view.display_message(client)
 
@@ -72,7 +72,7 @@ def create_client(token):
         try:
             token_id = token["id"]
         except KeyError:
-            view.display_error(f"No id stocked in the current token. Try to log again.")
+            view.display_error("No id stocked in the current token. Try to log again.")
             return
         sales_id = token_id
         client = Client(
@@ -117,10 +117,10 @@ def update_client(token):
         try:
             token_id = token["id"]
         except KeyError:
-            view.display_error(f"No id stocked in the current token. Try to log again.")
+            view.display_error("No id stocked in the current token. Try to log again.")
             return
-        if client.id != token_id:
-            view.display_error(f"This client is not assigned to you")
+        if client.sales_contact_id != token_id:
+            view.display_error("This client is not assigned to you")
             return
         view.display_message(f"Updating\n{client}", "blue")
         while True:

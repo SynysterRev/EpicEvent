@@ -1,4 +1,3 @@
-import sentry_sdk
 from argon2.exceptions import VerifyMismatchError
 from sqlalchemy import select, or_
 from sqlalchemy.orm import Session

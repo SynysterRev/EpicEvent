@@ -1,5 +1,4 @@
 import click
-import sentry_sdk
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -51,8 +50,10 @@ def get_contracts(token, status, remaining_amount, assigned):
                                  This is enabled by using the --status flag.
         remaining_amount (bool, optional): Display only contracts with remaining amount.
                                             Defaults to False.
-                                            This is enabled by using the --remaining-amount flag.
-        assigned (bool, optional): If True, only return contracts assigned to the current user.
+                                            This is enabled by
+                                            using the --remaining-amount flag.
+        assigned (bool, optional): If True, only return contracts assigned
+        to the current user.
                                     Defaults to False.
                                     This is enabled by using the --assigned flag.
     """
@@ -66,14 +67,14 @@ def get_contracts(token, status, remaining_amount, assigned):
             try:
                 collaborator_id = token["id"]
             except KeyError:
-                view.display_error(f"No id stocked in the current token.")
+                view.display_error("No id stocked in the current token.")
                 return
             select_stmt = select_stmt.where(
                 Contract.sales_contact_id == collaborator_id
             )
         contracts = session.execute(select_stmt).scalars().all()
         if not contracts:
-            view.display_message(f"No contracts found.")
+            view.display_message("No contracts found.")
         for contract in contracts:
             view.display_message(contract)
 
@@ -98,7 +99,7 @@ def create_contract():
             )
             return
         if collaborator.role != RoleType.SALES:
-            view.display_error(f"This collaborator cannot be assigned to a contract.")
+            view.display_error("This collaborator cannot be assigned to a contract.")
             return
 
         total_amount = util.ask_for_input("Total amount ", validator.validate_decimal)
