@@ -22,6 +22,7 @@ You will need to have PostgreSQL installed on your machine.
 6. Fill in the provided empty `.env` file. (see [Sentry](#Sentry) for more information about SENTRY_DSN)
 7. Run the command ```epicevent init``` and follow the instructions to set up the application.
 
+You can start using the app with the collaborator **"admin@admin.com"**, password **"Admin123!"**, it's a collaborator of type **"Management"**.
 # Available Commands
 Since everything is done via the command line, you will always need to start by typing ```epicevent <command_name>```.
 
@@ -67,20 +68,20 @@ epicevent create-collaborator
 
 ---
 
+### `update-collaborator`
+Updates an existing collaborator's information.
+
+```bash
+epicevent update-collaborator
+```
+
+---
+
 ### `delete-collaborator`
 Deletes an existing collaborator.
 
 ```bash
 epicevent delete-collaborator
-```
-
----
-
-### `create-client`
-Creates a new client.
-
-```bash
-epicevent create-client
 ```
 
 ---
@@ -97,15 +98,21 @@ epicevent get-clients [OPTIONS]
 
 ---
 
-### `get-events`
-Displays all events.
+### `create-client`
+Creates a new client.
 
 ```bash
-epicevent get-events [OPTIONS]
+epicevent create-client
 ```
 
-**Options:**
-- `--assign [all|assigned|no-contact]` : Filters events based on their assignment.
+---
+
+### `update-client`
+Updates an existing client's information.
+
+```bash
+epicevent update-client
+```
 
 ---
 
@@ -132,38 +139,31 @@ epicevent create-contract
 
 ---
 
-### `create-event`
-Creates a new event.
-
-```bash
-epicevent create-event
-```
-
----
-
-### `update-client`
-Updates an existing client's information.
-
-```bash
-epicevent update-client
-```
-
----
-
-### `update-collaborator`
-Updates an existing collaborator's information.
-
-```bash
-epicevent update-collaborator
-```
-
----
-
 ### `update-contract`
 Updates an existing contract's information.
 
 ```bash
 epicevent update-contract
+```
+
+---
+
+### `get-events`
+Displays all events.
+
+```bash
+epicevent get-events [OPTIONS]
+```
+
+**Options:**
+- `--assign [all|assigned|no-contact]` : Filters events based on their assignment.
+---
+
+### `create-event`
+Creates a new event.
+
+```bash
+epicevent create-event
 ```
 
 ---
