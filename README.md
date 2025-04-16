@@ -20,7 +20,7 @@ You will need to have PostgreSQL installed on your machine.
 4. Create a virtual environment and install dependencies with: ```poetry install```
 5. Activate the virtual environment with ```.venv\Scripts\activate.bat``` on Windows or ```eval $(poetry env activate)``` on macOS or Linux. (If needed, refer to: https://python-poetry.org/docs/managing-environments/#activating-the-environment)
 6. Fill in the provided empty `.env` file. (see [Sentry](#Sentry) for more information about SENTRY_DSN)
-7. Run the command ```epicevent init``` and follow the instructions to set up the application.
+7. Run the command ```epicevent init``` to create the database and tables.
 
 You can start using the app with the collaborator **"admin@admin.com"**, password **"Admin123!"**, it's a collaborator of type **"Management"**.
 # Available Commands
